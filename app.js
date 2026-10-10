@@ -124,7 +124,7 @@ try{speechSynthesis.getVoices();}catch(e){}
 const ART_ROOT="assets/art/";
 const GROW_ART=["egg","egg-cracked","baby","child","adult"];
 const art=(name,cls="",extra="")=>`<img class="game-art ${cls}" src="${ART_ROOT}${name}.webp" alt="" aria-hidden="true" draggable="false" width="314" height="314" ${extra}>`;
-const dinoArt=st=>art(GROW_ART[Math.max(0,Math.min(4,st))],"dino-art",'fetchpriority="high"');
+const dinoArt=st=>{const g=Math.max(0,Math.min(4,st));return art(GROW_ART[g],`dino-art g${g}`,'fetchpriority="high"');};
 const speciesArt=(id,locked=false)=>art(id,`species-art ${locked?"locked-sp":""}`);
 const starSVG=on=>`<svg viewBox="0 0 24 24" class="${on?"on":""}" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z" fill="${on?"var(--sun)":"#e2dccb"}" stroke="${on?"#e0a400":"#cfc7b2"}" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
 const starsRow=n=>`<span class="stars">${[1,2,3].map(i=>starSVG(n>=i)).join("")}</span>`;

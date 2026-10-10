@@ -1,6 +1,6 @@
 // きょうりゅう けいさん Service Worker
 // 更新したら VERSION を上げる
-const VERSION = "v5-image-art";
+const VERSION = "v6-image-art";
 const CACHE = "kyoryu-keisan-" + VERSION;
 const CORE = [
   "./",

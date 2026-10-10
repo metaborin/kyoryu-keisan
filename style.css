@@ -334,3 +334,12 @@ td.r,th.r{text-align:right}
   .area .scene{height:170px}
   .newfriend .game-art{width:88px;height:88px}
 }
+
+/* 成長の大きさの差: こども < おとな */
+.dino-art{transform-origin:50% 96%}
+.dino-art.g3{transform:scale(.84)}
+.tile > span{min-width:0;word-break:keep-all}
+@media(max-width:760px){
+  .tile{font-size:17px;padding:10px 12px;gap:8px}
+  .tile svg,.tile .journal-art{width:34px;height:34px}
+}
