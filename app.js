@@ -121,96 +121,11 @@ function speak(t){try{const u=new SpeechSynthesisUtterance(t);u.lang="ja-JP";u.r
 try{speechSynthesis.getVoices();}catch(e){}
 
 /* ================= 絵 ================= */
-function dinoSVG(st){
-  if(st<=1){
-    const crack=st===1?`<path d="M58 108 l14 -12 l12 14 l14 -14 l14 12 l14 -14 l16 14" fill="none" stroke="#7a6748" stroke-width="5" stroke-linejoin="round"/>
-      <circle cx="88" cy="128" r="6" fill="#1f4a33"/><circle cx="114" cy="128" r="6" fill="#1f4a33"/>`:"";
-    return `<svg viewBox="0 0 200 200" aria-hidden="true">
-      <ellipse cx="100" cy="182" rx="56" ry="10" fill="#0002"/>
-      <path d="M100 30 C150 30 160 120 152 145 C145 172 125 182 100 182 C75 182 55 172 48 145 C40 120 50 30 100 30Z" fill="var(--egg)" stroke="#d9c9a4" stroke-width="4"/>
-      <ellipse cx="80" cy="70" rx="10" ry="13" fill="var(--egg-spot)"/><ellipse cx="124" cy="92" rx="8" ry="10" fill="var(--egg-spot)"/>
-      <ellipse cx="96" cy="150" rx="12" ry="9" fill="var(--egg-spot)"/><ellipse cx="136" cy="140" rx="6" ry="7" fill="var(--egg-spot)"/>
-      <ellipse cx="78" cy="52" rx="9" ry="5" fill="#fff9" transform="rotate(-30 78 52)"/>${crack}</svg>`;
-  }
-  const sc=[0,0,.68,.84,1][st];
-  const spikes=st===2?[]:st===3?[[78,92],[98,90],[118,96]]:[[64,98],[82,90],[100,88],[118,92],[132,82]];
-  const sp=spikes.map(([x,y])=>`<path d="M${x-9} ${y+8} L${x} ${y-12} L${x+9} ${y+8}Z" fill="var(--lava)"/>`).join("");
-  const eyeR=st===2?8:6;
-  return `<svg viewBox="0 0 200 200" aria-hidden="true">
-    <ellipse cx="100" cy="186" rx="${60*sc+10}" ry="9" fill="#0002"/>
-    <g transform="translate(${100-100*sc} ${188-188*sc}) scale(${sc})">${sp}
-      <path d="M58 128 Q18 132 10 104 Q40 126 74 112Z" fill="var(--dino)"/>
-      <ellipse cx="95" cy="128" rx="46" ry="36" fill="var(--dino)"/>
-      <path d="M112 118 Q118 86 130 78 L158 92 Q146 112 134 136Z" fill="var(--dino)"/>
-      <ellipse cx="145" cy="76" rx="32" ry="26" fill="var(--dino)"/>
-      <ellipse cx="100" cy="138" rx="28" ry="20" fill="var(--belly)"/>
-      <rect x="70" y="150" width="17" height="30" rx="7" fill="var(--dino-dark)"/>
-      <rect x="106" y="150" width="17" height="30" rx="7" fill="var(--dino-dark)"/>
-      <path d="M128 118 q12 4 10 14" stroke="var(--dino-dark)" stroke-width="7" stroke-linecap="round" fill="none"/>
-      <circle cx="154" cy="68" r="${eyeR}" fill="#1f4a33"/><circle cx="${156+eyeR/4}" cy="${66-eyeR/4}" r="${eyeR/3}" fill="#fff"/>
-      <path d="M160 86 q10 6 16 -2" stroke="#1f4a33" stroke-width="4" stroke-linecap="round" fill="none"/>
-      <ellipse cx="146" cy="88" rx="7" ry="4" fill="#f6a38c" opacity=".8"/>
-      <circle cx="172" cy="74" r="2.5" fill="#1f4a33"/>
-    </g></svg>`;
-}
-const E=(cx,cy,rx,ry,f,x="")=>`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${f}" ${x}/>`;
-const EYE=(x,y)=>`<circle cx="${x}" cy="${y}" r="5" fill="#1f2a24"/><circle cx="${x+1.6}" cy="${y-1.6}" r="1.7" fill="#fff"/>`;
-const LEG=(x,y,h,f,w=16)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${f}"/>`;
-const ARM=(d,c)=>`<path d="${d}" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>`;
-function speciesBody(id){
-  switch(id){
-    case "rex":{const c="#e8964a",d="#c06f2c";return `
-      <path d="M78 112 Q30 112 6 150 Q46 132 86 140Z" fill="${c}"/>${LEG(84,140,40,d,18)}
-      ${E(100,122,40,30,c,'transform="rotate(-25 100 122)"')}${E(104,132,22,16,"#f8dcb0")}
-      ${E(114,146,18,20,c)}${LEG(108,150,30,c,18)}${E(122,180,14,5,d)}
-      ${E(128,92,18,24,c)}<rect x="118" y="50" width="64" height="40" rx="18" fill="${c}"/>
-      <path d="M140 80 H180" stroke="${d}" stroke-width="4" stroke-linecap="round"/>
-      <path d="M146 80 l3 6 l3 -6Z M156 80 l3 6 l3 -6Z M166 80 l3 6 l3 -6Z" fill="#fff"/>
-      ${ARM("M128 112 q10 2 12 10",d)}${EYE(150,64)}<circle cx="176" cy="60" r="2" fill="#1f2a24"/>`;}
-    case "tri":{const c="#7aa6c9",d="#557f9f";return `
-      <path d="M48 118 Q18 122 8 142 Q30 136 50 136Z" fill="${c}"/>${LEG(56,140,38,d)}${LEG(108,140,38,d)}
-      ${E(88,124,50,32,c)}${LEG(70,146,34,c)}${LEG(122,146,34,c)}
-      <circle cx="146" cy="98" r="34" fill="#f2b05e"/><circle cx="146" cy="98" r="25" fill="#f6c784"/>
-      ${E(156,116,26,20,c)}<path d="M176 108 L194 120 L176 128Z" fill="${d}"/>
-      <path d="M136 100 L146 64 L148 102Z" fill="#fff6e0"/><path d="M150 100 L172 62 L162 104Z" fill="#fff6e0"/>
-      <path d="M178 106 L184 90 L188 110Z" fill="#fff6e0"/>${EYE(160,110)}`;}
-    case "steg":{const c="#a7c957",d="#7c9a3c";
-      const pl=[50,66,82,98,114,130].map((x,i)=>{const y=i%2?72:62;return `<path d="M${x-9} 104 L${x-7} ${y+12} L${x} ${y} L${x+7} ${y+12} L${x+9} 104Z" fill="#e76f51"/>`;}).join("");
-      return `${pl}<path d="M48 120 Q20 110 8 92 Q24 126 52 138Z" fill="${c}"/>
-      <path d="M14 98 L2 84 M22 106 L12 92" stroke="#e76f51" stroke-width="5" stroke-linecap="round"/>
-      ${LEG(58,138,42,d)}${LEG(112,138,42,d)}${E(92,120,50,30,c)}${LEG(72,144,36,c)}${LEG(124,144,36,c)}
-      <path d="M134 112 Q154 122 158 140 L142 146 Q138 132 124 128Z" fill="${c}"/>${E(162,144,18,12,c)}${EYE(166,140)}`;}
-    case "brachio":{const c="#5fb3a8",d="#3f8c82";return `
-      <path d="M44 132 Q14 140 6 162 Q30 152 50 150Z" fill="${c}"/>${LEG(54,146,36,d,18)}${LEG(104,146,36,d,18)}
-      <path d="M108 126 Q124 70 140 34 L160 40 Q144 92 132 140Z" fill="${c}"/>${E(86,134,48,28,c)}
-      ${LEG(68,150,32,c,18)}${LEG(118,150,32,c,18)}${E(160,34,24,14,c)}${EYE(164,29)}
-      <path d="M170 42 q6 3 10 -1" stroke="#1f2a24" stroke-width="3" fill="none" stroke-linecap="round"/>`;}
-    case "ptera":{const c="#9b7fd1",d="#7558b3";return `
-      <path d="M96 102 L132 26 L152 40 L118 106Z" fill="#c4b2ec"/>${E(106,110,28,14,c)}
-      <path d="M100 104 L16 70 Q38 112 98 120Z" fill="${d}"/>
-      <path d="M132 92 L96 72 L138 100Z" fill="${c}"/>${E(140,98,14,12,c)}
-      <path d="M148 94 L194 104 L148 106Z" fill="#f2c14e"/>${EYE(142,95)}
-      <path d="M100 122 l-4 10 M110 122 l-2 10" stroke="${d}" stroke-width="3" stroke-linecap="round"/>`;}
-    case "anky":{const c="#b08968",d="#7f5539",s="#d6b48c";
-      const ar=[[64,120],[84,106],[104,102],[124,106],[144,120],[76,134],[100,126],[124,134]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="7" fill="${s}"/>`).join("");
-      return `<path d="M50 140 Q30 140 18 130" stroke="${c}" stroke-width="10" fill="none" stroke-linecap="round"/>${E(14,128,13,10,d)}
-      ${LEG(60,146,30,d,18)}${LEG(116,146,30,d,18)}<path d="M38 150 Q42 92 100 92 Q158 92 164 150Z" fill="${c}"/>${ar}
-      ${LEG(74,148,30,c,18)}${LEG(128,148,30,c,18)}${E(170,140,20,14,c)}<path d="M160 128 l6 -8 l4 9Z" fill="${d}"/>${EYE(174,136)}`;}
-    case "para":{const c="#e58fb0",d="#c26b8e";return `
-      <path d="M136 58 Q110 34 78 34 L82 46 Q110 46 132 70Z" fill="${d}"/>
-      <path d="M58 128 Q18 132 8 108 Q40 126 74 112Z" fill="${c}"/>${LEG(72,150,30,d,17)}${E(95,128,44,32,c)}
-      <path d="M112 118 Q118 86 130 78 L154 90 Q146 112 134 136Z" fill="${c}"/>${E(146,74,26,20,c)}${E(170,84,13,8,"#f7c6d8")}
-      ${E(100,138,26,18,"#fbe3ec")}${LEG(106,150,30,c,17)}${ARM("M128 118 q12 4 10 14",d)}${EYE(150,68)}`;}
-    case "spino":{const c="#d1495b",d="#a8323f";return `
-      <path d="M52 118 Q86 18 134 110Z" fill="#f4a261"/>
-      <path d="M72 112 L80 60 M93 110 L93 46 M114 110 L108 62" stroke="#e07b3c" stroke-width="4" stroke-linecap="round"/>
-      <path d="M56 126 Q16 128 6 108 Q38 124 72 114Z" fill="${c}"/>${LEG(74,148,32,d,17)}${E(96,128,44,28,c)}
-      ${E(130,108,18,18,c)}${E(156,98,32,13,c)}${LEG(108,148,32,c,17)}${E(100,136,26,14,"#f6c1c8")}
-      ${ARM("M124 120 q10 4 8 14",d)}${EYE(150,92)}`;}
-  }
-  return "";
-}
-const specSVG=(id,locked=false)=>`<svg viewBox="0 0 200 200" aria-hidden="true" class="${locked?"locked-sp":""}"><ellipse cx="100" cy="184" rx="66" ry="8" fill="#0002"/>${speciesBody(id)}</svg>`;
+const ART_ROOT="assets/art/";
+const GROW_ART=["egg","egg-cracked","baby","child","adult"];
+const art=(name,cls="",extra="")=>`<img class="game-art ${cls}" src="${ART_ROOT}${name}.webp" alt="" aria-hidden="true" draggable="false" width="314" height="314" ${extra}>`;
+const dinoArt=st=>art(GROW_ART[Math.max(0,Math.min(4,st))],"dino-art",'fetchpriority="high"');
+const speciesArt=(id,locked=false)=>art(id,`species-art ${locked?"locked-sp":""}`);
 const starSVG=on=>`<svg viewBox="0 0 24 24" class="${on?"on":""}" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z" fill="${on?"var(--sun)":"#e2dccb"}" stroke="${on?"#e0a400":"#cfc7b2"}" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
 const starsRow=n=>`<span class="stars">${[1,2,3].map(i=>starSVG(n>=i)).join("")}</span>`;
 const footSVG=(state,col)=>{const c=col||(state==="ok"?"var(--leaf)":state==="now"?"var(--lava)":"#d4cbb4");
@@ -219,27 +134,9 @@ const meat=`<svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><
 const spk=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
 const lockSVG=`<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" fill="#fff"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="#fff" stroke-width="2.5" fill="none"/></svg>`;
 const mapSVG=`<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M6 14 L22 8 L42 14 L58 8 V50 L42 56 L22 50 L6 56Z" fill="#fff6e0"/><path d="M22 8 V50 M42 14 V56" stroke="#e0c99a" stroke-width="2"/><path d="M12 44 Q22 30 30 36 T50 20" stroke="#f06a2c" stroke-width="3" stroke-dasharray="4 4" fill="none"/><path d="M46 16 l8 8 M54 16 l-8 8" stroke="#c4553a" stroke-width="3.5" stroke-linecap="round"/></svg>`;
-const bookSVG=`<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="6" width="32" height="38" rx="4" fill="#3a7bb8"/><rect x="12" y="6" width="28" height="34" rx="3" fill="#5d97cc"/><circle cx="26" cy="22" r="8" fill="#fff6e0"/><path d="M22 24 q4 -6 8 0" stroke="#3a7bb8" stroke-width="2.5" fill="none"/></svg>`;
+const bookArt=art("journal","journal-art");
 const retrySVG=`<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="#f6b0a0"/><path d="M15 25 a9 9 0 1 0 3 -8" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M14 11 v8 h8" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-function sceneSVG(cls){
-  const s={
-    jungle:`<rect width="300" height="92" fill="#bfe3b0"/><circle cx="250" cy="26" r="14" fill="#ffe08a"/>
-      <path d="M0 92 Q40 50 80 92Z M60 92 Q120 40 170 92Z M150 92 Q210 56 260 92Z M230 92 Q270 60 300 80 V92Z" fill="#5aa86f"/>
-      <ellipse cx="40" cy="40" rx="30" ry="10" fill="#3f8f5a" transform="rotate(-25 40 40)"/><ellipse cx="70" cy="32" rx="26" ry="8" fill="#4e9e64" transform="rotate(20 70 32)"/>
-      <ellipse cx="180" cy="38" rx="28" ry="9" fill="#3f8f5a" transform="rotate(-15 180 38)"/><rect x="0" y="84" width="300" height="8" fill="#c99a5b"/>`,
-    volcano:`<rect width="300" height="92" fill="#f8d6bc"/><circle cx="120" cy="18" r="10" fill="#e9c7ae"/><circle cx="138" cy="10" r="13" fill="#eccfb9"/>
-      <path d="M70 92 L150 18 L230 92Z" fill="#8c5a44"/><path d="M134 32 L150 18 L166 32 L158 44 L150 34 L142 46Z" fill="#f06a2c"/>
-      <path d="M150 34 Q160 60 146 92" stroke="#f06a2c" stroke-width="6" fill="none"/><rect x="0" y="84" width="300" height="8" fill="#a8734f"/>`,
-    sea:`<rect width="300" height="92" fill="#cfe9f6"/><circle cx="60" cy="28" r="15" fill="#ffe08a"/>
-      <path d="M0 60 Q25 50 50 60 T100 60 T150 60 T200 60 T250 60 T300 60 V92 H0Z" fill="#5d9fd0"/>
-      <path d="M0 72 Q25 64 50 72 T100 72 T150 72 T200 72 T250 72 T300 72 V92 H0Z" fill="#3a7bb8"/>
-      <path d="M220 58 l10 -14 l10 14Z" fill="#fff"/><path d="M230 44 v16" stroke="#8c5a44" stroke-width="2"/>`,
-    ice:`<rect width="300" height="92" fill="#e6f0f8"/><path d="M20 92 L90 22 L160 92Z" fill="#fff"/><path d="M90 22 L160 92 H110Z" fill="#cddff0"/>
-      <path d="M130 92 L210 34 L290 92Z" fill="#f6fbff"/><path d="M210 34 L290 92 H240Z" fill="#d6e5f3"/>
-      <circle cx="40" cy="20" r="3" fill="#fff"/><circle cx="250" cy="16" r="3" fill="#fff"/><circle cx="170" cy="22" r="2.5" fill="#fff"/><rect x="0" y="86" width="300" height="6" fill="#c3d6ea"/>`
-  };
-  return `<svg viewBox="0 0 300 92" preserveAspectRatio="xMidYMax slice" aria-hidden="true">${s[cls]}</svg>`;
-}
+const sceneArt=cls=>`<img class="scene-art" src="${ART_ROOT}${cls}.webp" alt="" aria-hidden="true" draggable="false" width="627" height="627">`;
 
 /* ================= 演出 ================= */
 function burst(el,n=16){
@@ -260,16 +157,16 @@ function slotCard(s,i){
       <span class="plus">+</span><span class="nm">あたらしく はじめる</span><span class="meta">ノート ${i+1}</span></button></div>`;
   const u=upgrade(s,i),st=stageOf(u.food),stars=Object.values(u.stars).reduce((a,b)=>a+b,0);
   return `<div class="slot" data-slot="${i}"><button class="open" data-pick="${i}">
-      ${dinoSVG(st)}<span class="nm">${esc(u.name)}</span>
+      ${dinoArt(st)}<span class="nm">${esc(u.name)}</span>
       <span class="meta">${meat} ${u.food} ・ ほし ${stars}/24 ・ なかま ${u.zukan.length}/8</span></button>
       <button class="del" data-del="${i}">けす</button></div>`;
 }
 function title(){
   R=null;S=null;cur=-1;
   app.innerHTML=`<section class="screen title">
-    <div class="title-hero"><div class="title-dino" id="tdino">${dinoSVG(4)}</div>
+    <div class="title-hero"><div class="title-dino" id="tdino">${dinoArt(4)}</div>
       <h1 class="title-logo">きょうりゅう<span>けいさん</span></h1></div>
-    <div class="parade">${["tri","steg","brachio","ptera","rex"].map(id=>specSVG(id)).join("")}</div>
+    <div class="parade">${["tri","steg","brachio","ptera","rex"].map(id=>speciesArt(id)).join("")}</div>
     <p class="title-sub">ぼうけんノートを えらんでね</p>
     <div class="slots">${DB.slots.map(slotCard).join("")}</div></section>`;
   app.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{tone([[523,.1],[784,.15]]);pick(+b.dataset.pick);});
@@ -287,7 +184,7 @@ function askDelete(i){
 }
 function newSlot(i){
   app.innerHTML=`<section class="screen title">
-    <div class="egg-new">${dinoSVG(0)}</div>
+    <div class="egg-new">${dinoArt(0)}</div>
     <form class="name-form" id="nf">
       <label for="nameIn" class="title-sub">なまえを いれてね</label>
       <input id="nameIn" maxlength="8" autocomplete="off" placeholder="ぼうけんしゃ${i+1}">
@@ -317,7 +214,7 @@ function home(){
     <div class="home">
       <div class="nest">
         <p class="dino-name">${esc(S.name)}の ${GROW[st].n}</p>
-        <div class="dino-wrap"><div class="dino-box" id="dino">${dinoSVG(st)}</div><div class="bubble" id="bub"></div></div>
+        <div class="dino-wrap"><div class="dino-box" id="dino">${dinoArt(st)}</div><div class="bubble" id="bub"></div></div>
         <div class="grow"><div class="grow-label"><span>せいちょう</span><span>${next?`つぎまで ごはん あと ${next.at-S.food}`:"いちばん おおきく なったよ!"}</span></div>
           <div class="bar"><i style="width:${pct}%"></i></div></div>
       </div>
@@ -327,7 +224,7 @@ function home(){
         <div class="goal">きょうの もくひょう <span class="gd">${Array.from({length:goal},(_,i)=>`<i class="${i<done?"on":""}"></i>`).join("")}</span>
           <span>${done>=goal?"たっせい!":`あと ${goal-done}かい`}</span></div>
         <div class="two">
-          <button class="tile" id="toZukan">${bookSVG}<span>ずかん<small>なかま ${S.zukan.length}/8</small></span></button>
+          <button class="tile" id="toZukan">${bookArt}<span>ずかん<small>なかま ${S.zukan.length}/8</small></span></button>
           <button class="tile" id="toReview" ${S.mistakes.length?"":"disabled"}>${retrySVG}<span>ふくしゅう<small>${S.mistakes.length?`${S.mistakes.length}もん`:"いまは ないよ"}</small></span></button>
         </div>
         <div class="stamp"><h2>スタンプカード <small>${S.days.includes(today())?"きょうの スタンプ ゲット!":"1かい あそぶと 1こ"}</small></h2>
@@ -354,7 +251,7 @@ function map(){
       const sts=STAGES.map((s,i)=>({...s,i})).filter(s=>s.area===ai);
       const open=unlocked(sts[0].i);
       const got=sts.reduce((n,s)=>n+(S.stars[s.id]||0),0);
-      return `<div class="area ${a.cls} ${open?"":"lock"}"><div class="scene">${sceneSVG(a.cls)}</div>
+      return `<div class="area ${a.cls} ${open?"":"lock"}"><div class="scene">${sceneArt(a.cls)}</div>
         <h2>${a.name}<small>ほし ${got}/6</small></h2>
         <div class="nodes">${sts.map(s=>{const ok=unlocked(s.i);return `
           <button class="node ${s.i===nextStage?"next":""}" data-st="${s.id}" ${ok?"":"disabled"} aria-label="${s.name}">
@@ -397,7 +294,7 @@ function quiz(){
         <div class="hint" id="hint"></div>
         <p class="msg" id="msg">${q.review?"まえに まちがえた もんだいだよ":""}</p>
         <div class="mini-row">
-          <div class="mini" id="mini">${dinoSVG(Math.max(2,stageOf(S.food)))}</div>
+          <div class="mini" id="mini">${dinoArt(Math.max(2,stageOf(S.food)))}</div>
           <button class="say" id="say">${spk} よみあげ</button>
         </div>
       </div>
@@ -518,8 +415,8 @@ function result(){
     ${isReview?`<p class="note">ふくしゅう おわり! のこり ${S.mistakes.length}もん</p>`:`<div class="big-stars">${[1,2,3].map(i=>starSVG(i<=stars)).join("")}</div>`}
     <div class="food">${meat} ごはん +${R.food}${bonus?" ・ スタンプボーナス +10":""}${R.maxCombo>=3?` ・ さいこう れんぞく ${R.maxCombo}`:""}</div>
     <div class="res-row">
-      <div class="res-dino" id="rd">${dinoSVG(after)}</div>
-      ${newSp?`<div class="newfriend" id="nf">${specSVG(newSp.id)}<div><b>あたらしい なかま!</b><span>${newSp.name}</span></div></div>`:""}
+      <div class="res-dino" id="rd">${dinoArt(after)}</div>
+      ${newSp?`<div class="newfriend" id="nf">${speciesArt(newSp.id)}<div><b>あたらしい なかま!</b><span>${newSp.name}</span></div></div>`:""}
     </div>
     ${grew?`<p class="note" style="color:var(--lava)">${GROW[after].n}に せいちょうした!</p>`:""}
     ${firstClear&&nextSt?`<p class="note">「${nextSt.name}」が あそべるように なったよ!</p>`:""}
@@ -544,11 +441,11 @@ function zukan(){
   app.innerHTML=`<section class="screen">
     <div class="top"><h1 class="h-title">きょうりゅう ずかん <span style="font-size:.6em">${S.zukan.length}/8</span></h1><button class="quit" id="back">おうちへ</button></div>
     <div class="zukan">${SPECIES.map((sp,i)=>{const got=S.zukan.includes(sp.id);return `
-      <button class="zc" data-z="${i}" ${got?"":"disabled"}>${specSVG(sp.id,!got)}
+      <button class="zc" data-z="${i}" ${got?"":"disabled"}>${speciesArt(sp.id,!got)}
         <span class="zn">${got?sp.name:"???"}</span><span class="zf">${got?sp.fact:`「${STAGES[i].name}」を クリアすると なかまに なるよ`}</span></button>`;}).join("")}
     </div></section>`;
   document.getElementById("back").onclick=home;
-  app.querySelectorAll(".zc[data-z]").forEach(b=>b.onclick=()=>{const sp=SPECIES[+b.dataset.z];hopEl(b.querySelector("svg"));tone([[523,.1],[659,.1],[784,.15]]);speak(`${sp.name}。${sp.fact}`);});
+  app.querySelectorAll(".zc[data-z]").forEach(b=>b.onclick=()=>{const sp=SPECIES[+b.dataset.z];hopEl(b.querySelector(".game-art"));tone([[523,.1],[659,.1],[784,.15]]);speak(`${sp.name}。${sp.fact}`);});
 }
 
 /* ================= おうちのかたへ ================= */

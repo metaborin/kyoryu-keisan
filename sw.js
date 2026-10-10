@@ -1,6 +1,6 @@
 // きょうりゅう けいさん Service Worker
 // 更新したら VERSION を上げる
-const VERSION = "v4";
+const VERSION = "v5-image-art";
 const CACHE = "kyoryu-keisan-" + VERSION;
 const CORE = [
   "./",
@@ -11,7 +11,27 @@ const CORE = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",
-  "./icons/favicon-32.png"
+  "./icons/favicon-32.png",
+  "./assets/art/adult.webp",
+  "./assets/art/anky.webp",
+  "./assets/art/baby.webp",
+  "./assets/art/brachio.webp",
+  "./assets/art/child.webp",
+  "./assets/art/egg-cracked.webp",
+  "./assets/art/egg.webp",
+  "./assets/art/ice.webp",
+  "./assets/art/journal.webp",
+  "./assets/art/jungle.webp",
+  "./assets/art/nest.webp",
+  "./assets/art/para.webp",
+  "./assets/art/ptera.webp",
+  "./assets/art/rex.webp",
+  "./assets/art/sea.webp",
+  "./assets/art/spino.webp",
+  "./assets/art/steg.webp",
+  "./assets/art/treasure.webp",
+  "./assets/art/tri.webp",
+  "./assets/art/volcano.webp"
 ];
 
 self.addEventListener("install", e => {

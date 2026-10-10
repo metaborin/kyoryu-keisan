@@ -287,3 +287,50 @@ td.r,th.r{text-align:right}
   .cal{grid-template-columns:repeat(7,minmax(0,1fr))}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+
+/* GPT Image adventure illustrations. Arithmetic and hints stay on plain boards. */
+:root{--sky:#eaf0e8;--leaf:#3d6444;--leaf-deep:#233d2d;--lava:#cc672b;--lava-dark:#86401b;--card:#fffdf7;--line:#ccbea1;--muted:#eee5d2}
+.app{background:radial-gradient(ellipse at 15% 0%,#fff8e7 0,transparent 65%),linear-gradient(180deg,#eef3eb,#e0e9dd)}
+.screen{width:100%;max-width:1240px;margin-inline:auto;box-sizing:border-box}
+.game-art{display:block;object-fit:contain;max-width:100%;height:auto;pointer-events:none}
+.title-hero{position:relative;isolation:isolate;width:100%;max-width:960px;min-height:220px;padding:20px 24px;box-sizing:border-box;border-radius:28px;overflow:hidden;background:linear-gradient(90deg,#fff9e9e6 0%,#fff9e9d9 55%,#fff9e933),url("assets/art/jungle.webp") center 45%/cover;box-shadow:0 7px 0 #233d2d18;border:1px solid #fff9}
+.title-dino .game-art,.egg-new .game-art,.dino-box .game-art,.mini .game-art,.res-dino .game-art{width:100%;height:100%}
+.title-logo{font-size:clamp(36px,6.5vw,74px);text-shadow:0 3px 0 #fff9}
+.title-logo span{color:var(--lava-dark)}
+.parade{height:70px;gap:12px}
+.parade .game-art{width:70px;height:70px;animation:bob 3s ease-in-out infinite}
+.parade .game-art:nth-child(2n){animation-delay:.4s}.parade .game-art:nth-child(3n){animation-delay:.8s}
+.slot{border:1px solid #d8d1bc;box-shadow:0 5px 0 #395c4233}
+.slot .open>.game-art{width:110px;height:110px}
+.slot.empty{background:#fffdf799;border:3px dashed #8ca88b}
+.nest{background:linear-gradient(180deg,#fffdf7f2,#fffdf7c9),url("assets/art/jungle.webp") center/cover;border:1px solid #d7d7c1}
+.nest::after{height:19%;background:linear-gradient(transparent,#bba07488)}
+.dino-wrap::before{content:"";position:absolute;width:82%;height:82%;left:9%;bottom:-8%;background:url("assets/art/nest.webp") center/contain no-repeat;opacity:.9;pointer-events:none}
+.dino-box{position:relative;z-index:1}
+.grow,.pill,.goal,.stamp{border:1px solid #e2d9c6}
+.tile .journal-art{width:48px;height:48px;flex:none}
+.area{border:1px solid #d6cdb7;box-shadow:0 5px 0 #233d2d1a}
+.area .scene{height:clamp(124px,15vw,180px);overflow:hidden}
+.scene-art{width:100%;height:100%;object-fit:cover;object-position:center 45%;display:block}
+.area.lock .scene{filter:grayscale(.65) saturate(.55) opacity(.75)}
+.newfriend .game-art{width:110px;height:110px;flex:none}
+.zc .game-art{width:100%;max-width:170px;aspect-ratio:1;height:auto}
+.zc{border:1px solid #d8d0ba;transition:transform .15s,box-shadow .15s}
+.zc:not(:disabled):hover{transform:translateY(-3px);box-shadow:0 8px 0 #bfb59d}
+.board{border:1px solid #d7ceba}
+.key{border:1px solid #dbd3c0}
+.key.go{border-color:transparent}
+.result h2::before{content:"";display:inline-block;width:64px;height:64px;vertical-align:middle;margin-right:8px;background:url("assets/art/treasure.webp") center/contain no-repeat}
+@media(max-width:760px){
+  .home{flex:none;grid-auto-rows:auto}
+  .nest{min-height:360px;box-sizing:border-box}
+  .title{justify-content:flex-start;gap:18px}
+  .title-hero{min-height:180px;padding:16px 10px;gap:8px;flex-wrap:nowrap}
+  .title-dino{width:clamp(96px,28vw,150px);flex:none}
+  .title-logo{font-size:clamp(28px,7.5vw,48px)}
+  .parade{height:54px;gap:4px}.parade .game-art{width:54px;height:54px}
+  .slot .open>.game-art{width:72px;height:72px}
+  .area .scene{height:170px}
+  .newfriend .game-art{width:88px;height:88px}
+}
