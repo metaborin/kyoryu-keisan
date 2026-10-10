@@ -1,6 +1,6 @@
 // きょうりゅう けいさん Service Worker
 // 更新したら VERSION を上げる
-const VERSION = "v12b-nest";
+const VERSION = "v12c-nocache";
 const CACHE = "kyoryu-keisan-" + VERSION;
 const CORE = [
   "./",
@@ -79,7 +79,7 @@ const CORE = [
 ];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE.map(u => new Request(u, { cache: "reload" })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", e => {
@@ -98,7 +98,7 @@ self.addEventListener("fetch", e => {
   // ページ本体: ネット優先(更新をすぐ反映)、つながらなければキャッシュ
   if (req.mode === "navigate") {
     e.respondWith(
-      fetch(req)
+      fetch(req, { cache: "no-cache" })
         .then(res => { const copy = res.clone(); caches.open(CACHE).then(c => c.put("./index.html", copy)); return res; })
         .catch(() => caches.match("./index.html"))
     );
@@ -108,7 +108,7 @@ self.addEventListener("fetch", e => {
   // 同じサイトのファイル(app.js・style.css・画像): ネット優先、つながらなければキャッシュ
   if (url.origin === location.origin) {
     e.respondWith(
-      fetch(req)
+      fetch(req, { cache: "no-cache" })
         .then(res => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return res; })
         .catch(() => caches.match(req, { ignoreSearch: true }))
     );
