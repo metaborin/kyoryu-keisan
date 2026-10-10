@@ -1,10 +1,12 @@
 // きょうりゅう けいさん Service Worker
 // 更新したら VERSION を上げる
-const VERSION = "v3";
+const VERSION = "v4";
 const CACHE = "kyoryu-keisan-" + VERSION;
 const CORE = [
   "./",
   "./index.html",
+  "./style.css",
+  "./app.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -39,8 +41,18 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // フォント(Google Fonts)と同じサイトの画像など: キャッシュ優先、裏で更新
-  if (url.origin === location.origin || url.host === "fonts.googleapis.com" || url.host === "fonts.gstatic.com") {
+  // 同じサイトのファイル(app.js・style.css・画像): ネット優先、つながらなければキャッシュ
+  if (url.origin === location.origin) {
+    e.respondWith(
+      fetch(req)
+        .then(res => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return res; })
+        .catch(() => caches.match(req, { ignoreSearch: true }))
+    );
+    return;
+  }
+
+  // フォント(Google Fonts): キャッシュ優先、裏で更新
+  if (url.host === "fonts.googleapis.com" || url.host === "fonts.gstatic.com") {
     e.respondWith(
       caches.open(CACHE).then(async c => {
         const hit = await c.match(req);
