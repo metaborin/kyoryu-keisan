@@ -18,3 +18,41 @@ TOP RIGHT: warm volcanic land, distant rounded volcano with a small orange lava 
 BOTTOM LEFT: tranquil turquoise prehistoric sea, sandy shoreline, rounded tropical islands, distant leafy palms, sparkling clear blue water, pale sunny sky.
 BOTTOM RIGHT: enchanting icy country, pale blue rounded snow mountains, crystalline ice beside a winding snowy trail, soft lavender and mint colors and pale golden sun, gentle inviting scenery.
 Keep painterly edges sophisticated, distinct recognizable biomes. Fill each quadrant edge-to-edge, especially its perimeter; no frame or background bleed from neighboring quadrants.
+
+
+--- v8-fossil-art / GPT Image 組み込みツール ---
+
+化石アトラス
+Use case: illustration-story.
+Asset type: ONE opaque production fossil atlas, exactly four columns by two rows of EQUAL SQUARE CELLS, landscape canvas aspect ratio 2:1, preferably 2048x1024 or 1600x800. Eight independent cells edge-to-edge without gutters.
+Input images: image 1 (rex.webp) is a STYLE REFERENCE ONLY; match its natural-history museum illustration, warm gouache grain, dimensional lighting and restrained child-friendly realism. Image 2 (treasure.webp) is also a STYLE REFERENCE for rich tactile painting, not a subject to include.
+Each cell is entirely filled by its own square slab of warm sandy limestone. Unified stone color and top-left light direction, fine cracks, small pebbles, soft uneven mineral relief. NO frames, borders, grid lines, labels, text, numbers, watermarks, or any treasure chests.
+Inside each slab: one recognizable IVORY BONE SKELETON fossil, side view facing RIGHT, partly embedded in the limestone. Whole skull, spine, limbs, tail, armor/plates/crest visible; bones are pale ivory, no skin, meat, blood or scary expressions. Museum fossil-relief gouache painting, rich yet gentle, suitable for six-year-old children.
+EXACT ORDER: Top row left to right: stegosaurus (tall plates on its back and spikes on tail), triceratops (three horns and bony neck frill), ankylosaurus (armored plates and club on tail), parasaurolophus (long backward crest on skull).
+Bottom row left to right: brachiosaurus (very long upward raised neck), pteranodon (open spread wings with visible finger bones, long beak and crest), spinosaurus (high spinal sail bones and long snout), tyrannosaurus rex (large skull, tiny forelimbs, strong hindlimbs and long tail).
+CRITICAL PRODUCTION LAYOUT: every skeleton centered and LARGE, roughly 80-84% of both cell width and height. Keep every bone including wing, neck, tail and horn INSIDE ITS OWN CELL with about 8% stone-only margin along all four sides. No bone may touch or cross a cell boundary. Each fossil will be split again into four quadrant puzzle pieces, so ivory bones must be conspicuous in ALL FOUR QUADRANTS of every slab, not concentrated in the lower half. Compose with broad full-body outlines, raised or subtly curved tails, diagonally reaching limbs and expansive crests/plates to span the quarters naturally. Do not add disconnected spare bones as decoration. Make skull and identifying features readable at 400px square. Stone fills each cell completely; no gaps between slabs.
+
+化石の余白・4分割配置の修正
+Use case: precise-object-edit.
+Edit target: the attached 4-column, 2-row fossil atlas. Keep the same eight species, exact order, 2:1 canvas with eight square cells, warm limestone and ivory skeletons, rich museum gouache texture and top-left light.
+Repair spacing and puzzle coverage:
+1. Recenter and modestly shrink EACH skeleton so ALL parts including tails, nose, horns, wings and raised neck have roughly 8% stone-only margin from EVERY edge of their own square cell. Maximum skeleton width and height 84% of cell. No clipping or crossing cells. Stegosaurus tail spikes, brachiosaurus tail tip, triceratops horns and rex snout especially need padding.
+2. Brachiosaurus in bottom-left cell: gently curve its long tail upward into the UPPER LEFT quarter, while retaining its raised neck and head in the upper right, torso and legs below. Pale visible ivory tail vertebrae MUST clearly appear in the upper-left quadrant. Every skeleton in every cell must have clear ivory bones in all four quadrant puzzle pieces.
+3. Pteranodon in bottom-row second cell: show FOSSIL BONES only, not living wing membranes. Preserve the spread-wing pose, but the triangular spaces between wing bones must be sandy limestone, with no skin or membrane.
+4. Remove artificial dark grid-divider grooves and rounded rectangular frame effects; slabs fill cells edge-to-edge as continuous textured warm sandstone with normal tiny cracks. Do not insert outlines or decorative frames.
+No new decorative bones, text, labels, numbers, watermarks or blood. Preserve all other dinosaur features and reference art style.
+
+ごほうび小物アトラス
+Use case: illustration-story.
+Asset type: ONE transparent production reward-props sprite atlas, exactly FOUR columns by TWO rows of equal square cells, landscape canvas 2:1 aspect ratio preferably 1600x800. Genuine transparent alpha background; empty areas completely transparent, no painted checkerboard, no white backdrop.
+Input image 1 rex.webp: STYLE REFERENCE ONLY, natural-history museum gouache painting, warm grain, richly dimensional light, realistic tactile detail, restrained cuteness. Input image 2 treasure.webp: EXACT closed treasure chest design reference; use the same curved wooden chest with thick aged brass hoops, brass corner rivets and large central lock plate, but opened in cell 5.
+EXACT EIGHT SUBJECTS: top row, left to right: (1) golden dinosaur egg with soft organic spots and very faint contained glow, (2) bronze medal with embossed DINOSAUR FOOTPRINT and red-and-blue ribbon, (3) SILVER version of the SAME medal design and same red-and-blue ribbon, (4) GOLD version of the SAME medal design and same red-and-blue ribbon. The three medals differ ONLY in metal color, not in shape or ribbons.
+Bottom row left to right: (5) the reference wooden and brass treasure chest now OPEN, lid tilted back, a modest warm gold glow INSIDE and a few small ivory fossil fragments inside, (6) antique brass stopwatch with a small loop and winding knob, a clock face with simple unnumbered tick marks and hands, (7) a black-and-white CHECKERED finish flag attached to a brown wooden pole, (8) rolled and partially unrolled parchment adventure map with a tiny brass compass, NO lettering or numbers or compass letters, subtle unlabelled natural terrain.
+CRITICAL SPACING: each entire object, ribbons, flag pole, chest lid, glow and any shadow occupy NO MORE THAN 72% of cell width AND 72% of cell height. Centered within its own cell; at least 14% of fully TRANSPARENT EMPTY margin on ALL FOUR SIDES. No object, shadow, glow, speckle or pixel may cross into a neighboring cell or reach a cell boundary. The atlas will be cut into eight standalone square icons, so spacious transparent gutters are mandatory.
+No text, numerals, labels, watermarks, borders, cell outlines or background elements. Warm restrained forest-and-amber adventure palette, child friendly but NOT chibi or kawaii. Match reference texture and lighting.
+
+金のメダル：共通デザインへの調整
+Use case: precise-object-edit. Edit target: the provided square transparent bronze medal image. Change ONLY the bronze metal into warm GOLD metal. Absolutely preserve the exact medal silhouette, upright orientation, footprint embossing contour, ribbon shape, red-and-blue ribbon colors, position, scale, shadows, painting texture, alpha padding and all other pixels' design. Do NOT tilt or rotate it. Do NOT redesign the footprint. This gold medal must match the bronze medal perfectly except metal hue. Warm museum gouache and dimensional metal lighting, no extra sparkle or glow. Transparent background, no text, no numbers, no labels, no watermark.
+
+銀のメダル：共通デザインへの調整
+Use case: precise-object-edit. Edit target: provided bronze medal icon. Change ONLY bronze metal into cool SILVER metal. Preserve the exact upright orientation, silhouette, dinosaur-footprint embossing, red-and-blue ribbon colors and ribbon shape, image position and proportions, warm painted gouache texture and alpha padding. No rotation, no new design or details. Silver should have believable dimensional metal highlights but all geometry must match bronze. Fully transparent background. No text, numbers, labels, watermark or new glow.

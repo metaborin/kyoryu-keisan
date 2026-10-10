@@ -135,7 +135,7 @@ const footSVG=(state,col)=>{const c=col||(state==="ok"?"var(--leaf)":state==="no
 const meat=`<svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><path d="M8 24 L4 28" stroke="#f3ead6" stroke-width="5" stroke-linecap="round"/><circle cx="3.5" cy="28.5" r="3" fill="#f3ead6"/><ellipse cx="18" cy="14" rx="12" ry="10" fill="#c4553a" transform="rotate(-40 18 14)"/><ellipse cx="20" cy="11" rx="5" ry="3" fill="#e98a6c" transform="rotate(-40 20 11)"/></svg>`;
 const spk=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
 const lockSVG=`<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" fill="#fff"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="#fff" stroke-width="2.5" fill="none"/></svg>`;
-const mapSVG=`<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M6 14 L22 8 L42 14 L58 8 V50 L42 56 L22 50 L6 56Z" fill="#fff6e0"/><path d="M22 8 V50 M42 14 V56" stroke="#e0c99a" stroke-width="2"/><path d="M12 44 Q22 30 30 36 T50 20" stroke="#f06a2c" stroke-width="3" stroke-dasharray="4 4" fill="none"/><path d="M46 16 l8 8 M54 16 l-8 8" stroke="#c4553a" stroke-width="3.5" stroke-linecap="round"/></svg>`;
+const mapSVG=art("map","map-art");
 const bookArt=art("journal","journal-art");
 const retrySVG=`<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="#f6b0a0"/><path d="M15 25 a9 9 0 1 0 3 -8" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M14 11 v8 h8" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const sceneArt=cls=>`<img class="scene-art" src="${ART_ROOT}${cls}.webp" alt="" aria-hidden="true" draggable="false" width="627" height="627">`;
@@ -203,7 +203,7 @@ function newSlot(i){
 /* ================= くりかえし あそびの しくみ ================= */
 const MEDALS=[{n:3,name:"どう",c:"#c98a4b"},{n:10,name:"ぎん",c:"#a9b4bf"},{n:25,name:"きん",c:"#e8b923"}];
 const medalOf=n=>{let m=-1;MEDALS.forEach((x,i)=>{if(n>=x.n)m=i;});return m;};
-const medalSVG=(i,size=28)=>{const m=MEDALS[i];return `<svg viewBox="0 0 32 40" width="${size}" height="${size*1.25}" aria-hidden="true"><path d="M9 0 L16 12 L23 0Z" fill="#3a7bb8"/><path d="M4 0 L12 14 L16 8 L10 0Z" fill="#e05a4f"/><path d="M28 0 L20 14 L16 8 L22 0Z" fill="#e05a4f"/><circle cx="16" cy="26" r="12" fill="${m.c}" stroke="#0002" stroke-width="2"/><circle cx="16" cy="26" r="7.5" fill="none" stroke="#fff8" stroke-width="2"/><path d="M16 21 l1.6 3.3 3.6.5 -2.6 2.5 .6 3.6 -3.2 -1.7 -3.2 1.7 .6 -3.6 -2.6 -2.5 3.6 -.5Z" fill="#fff9"/></svg>`;};
+const medalSVG=(i,size=28)=>`<img class="medal-art" src="${ART_ROOT}medal-${["bronze","silver","gold"][i]}.webp" alt="" aria-hidden="true" draggable="false" width="${size}" height="${size*1.25}">`;
 const stageBest=id=>S.best[id]||(S.best[id]={time:0,speed:0,race:1});
 const cleared=id=>(S.stars[id]||0)>=1;
 const PER_Q={s1:6,s2:6,s3:6,s4:5,s5:10,s6:8,s7:9,s8:9};
@@ -250,7 +250,7 @@ function rollFossil(prefer){
   (S.fossils[id]=S.fossils[id]||[]).push(p);
   return {id,p,complete:fossilCount(id)===4};
 }
-const fossilPiece=(id,p)=>`<span class="fp" style="background-image:url('${ART_ROOT}${id}.webp');background-position:${p%2?"100%":"0%"} ${p>1?"100%":"0%"}"></span>`;
+const fossilPiece=(id,p)=>`<span class="fp" style="background-image:url('${ART_ROOT}fossil-${id}.webp');background-position:${p%2?"100%":"0%"} ${p>1?"100%":"0%"}"></span>`;
 const fossilBoard=(id,cls="")=>`<div class="fboard ${cls} ${fossilCount(id)===4?"full":""}">${[0,1,2,3].map(p=>(S.fossils[id]||[]).includes(p)?fossilPiece(id,p):`<span class="fp empty"></span>`).join("")}</div>`;
 const spName=id=>{const sp=SPECIES.find(s=>s.id===id);return S.zukan.includes(id)?sp.name:"なぞの きょうりゅう";};
 
@@ -398,7 +398,7 @@ function headerHTML(){
     return `<div class="track"><div class="lane me"><span class="runner" id="rMe" style="left:calc((100% - 72px) * ${p})">${dinoArt(Math.max(2,stageOf(S.food)))}</span></div>
       <div class="lane rv"><span class="runner" id="rRv" style="left:0">${speciesArt(R.rival)}</span></div><span class="flag" aria-hidden="true"></span>
       <span class="left">ゴールまで あと <b>${10-R.correct}</b>もん</span></div>`;}
-  if(R.mode==="speed"){return `<div class="timer"><div class="tbar"><i id="tbar"></i></div><span class="tsec" id="tsec">60</span><span class="tcount">せいかい <b id="tcnt">${R.count}</b></span></div>`;}
+  if(R.mode==="speed"){return `<div class="timer">${art("stopwatch","timer-art")}<div class="tbar"><i id="tbar"></i></div><span class="tsec" id="tsec">60</span><span class="tcount">せいかい <b id="tcnt">${R.count}</b></span></div>`;}
   return `<div class="steps">${R.qs.map((x,i)=>footSVG(i<R.i?"ok":i===R.i?"now":"")).join("")}</div>`;
 }
 function tick(){
@@ -431,7 +431,7 @@ function quiz(){
       <span class="combo ${R.combo>=3?"on":""}" id="combo">れんぞく ${R.combo}!</span></div>
     <div class="quiz">
       <div class="board ${q.gold?"gold":""}">
-        ${q.gold?`<span class="gold-tag">きんの たまご もんだい! いっかいで せいかいすると ごはん +3</span>`:""}
+        ${q.gold?`<span class="gold-tag">${art("gold-egg","gold-icon")}<span>きんの たまご もんだい! いっかいで せいかいすると ごはん +3</span></span>`:""}
         ${q.choices?`<span class="choice-tag">こたえを えらんでね</span>`:""}
         <div class="eq ${long?"long":""}">${toks}</div>
         <div class="hint" id="hint"></div>
@@ -617,9 +617,9 @@ function finishRun(extra){
     document.getElementById("chest").onclick=()=>{
       const c=document.getElementById("chest");c.classList.add("opening");tone([[392,.08],[440,.08],[494,.08]]);
       setTimeout(()=>{const f=chests.shift();sNew();
-        area.innerHTML=f?`<div class="reveal">${fossilBoard(f.id,"big")}<div><b>${f.complete?"かせき かんせい!":"かせきの かけらを みつけた!"}</b>
+        area.innerHTML=f?`<div class="reveal"><div class="chest-mini">${art("chest-open","chest-art")}</div>${fossilBoard(f.id,"big")}<div><b>${f.complete?"かせき かんせい!":"かせきの かけらを みつけた!"}</b>
           <span>${spName(f.id)}の かせき ${fossilCount(f.id)}/4</span></div></div>`:
-          `<div class="reveal"><div class="chest-mini">${art("treasure","chest-art")}</div><div><b>ごはんが はいってた!</b><span>${meat} ごはん +3</span></div></div>`;
+          `<div class="reveal"><div class="chest-mini">${art("chest-open","chest-art")}</div><div><b>ごはんが はいってた!</b><span>${meat} ごはん +3</span></div></div>`;
         burst(area,f&&f.complete?34:20);
         if(f&&f.complete)speak(`${spName(f.id)}の かせき、かんせい!`);
         if(chests.length)setTimeout(showChest,1800);

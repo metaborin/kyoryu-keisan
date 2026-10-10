@@ -397,8 +397,8 @@ td.r,th.r{text-align:right}
 .lane.rv .runner{transition:none}
 .runner .game-art{width:100%;height:100%;object-fit:contain}
 .lane.rv .runner .game-art{transform:none}
-.flag{position:absolute;right:10px;top:6px;bottom:6px;width:20px;border-radius:3px;
-  background:repeating-conic-gradient(#233d2d 0 25%,#fff 0 50%) 0 0/10px 10px}
+.track .flag{position:absolute;right:0;top:4px;height:calc(100% - 8px);aspect-ratio:1;
+  background:url("assets/art/flag.webp") center/contain no-repeat;pointer-events:none}
 .track .left{position:absolute;right:46px;top:-24px;font-size:14px;background:var(--card);border-radius:999px;padding:2px 10px}
 .race-res{display:flex;align-items:center;gap:14px}
 .race-res .game-art{width:110px;height:110px}
@@ -452,8 +452,7 @@ td.r,th.r{text-align:right}
 .fboard.big{width:120px}
 .fboard.sm{width:58px;border-radius:8px;padding:3px}
 .fboard.full{background-color:#d8c49b;box-shadow:0 0 0 3px var(--sun)}
-.fp{display:block;border-radius:4px;background-size:200% 200%;background-repeat:no-repeat;background-color:#e8dcc1;
-  filter:sepia(1) saturate(.35) brightness(1.05) contrast(1.2)}
+.fp{display:block;border-radius:4px;background-size:200% 200%;background-repeat:no-repeat;background-color:#e8dcc1}
 .fp.empty{background:#a9905f;filter:none;box-shadow:inset 0 2px 4px #0003}
 .zhelp{margin:0;font-size:15px;font-weight:500;background:var(--card);border-radius:14px;padding:8px 14px}
 .zc{padding:0;overflow:hidden;gap:0}
@@ -475,3 +474,22 @@ td.r,th.r{text-align:right}
 .track .left{top:3px;right:46px;font-size:13px;padding:1px 10px}
 .lane{height:46px}
 .runner{width:72px;height:58px}
+
+
+/* Fossils and rewards: museum gouache artwork, decorative to assistive technology. */
+.medal-art{display:block;object-fit:contain;flex:none}
+.go-adv .map-art{width:64px;height:64px;flex:none}
+.timer .timer-art{width:36px;height:36px;flex:none}
+.gold-tag{display:flex;align-items:center;gap:8px;max-width:100%;box-sizing:border-box}
+.gold-tag .gold-icon{width:32px;height:32px;flex:none}
+.gold-tag>span{min-width:0}
+.chest-area{max-width:100%}
+.reveal{max-width:100%;box-sizing:border-box;flex-wrap:wrap;justify-content:center}
+.reveal .chest-mini,.reveal .fboard{flex:none}
+.reveal>div:last-child{flex:1 1 160px;min-width:0}
+@media(max-width:760px){
+  .timer{gap:8px}
+  .timer .tbar{min-width:36px}
+  .timer .tcount{font-size:16px;padding:6px 10px;white-space:nowrap}
+  .gold-tag{border-radius:18px;text-align:left}
+}

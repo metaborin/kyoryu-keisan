@@ -1,6 +1,6 @@
 // きょうりゅう けいさん Service Worker
 // 更新したら VERSION を上げる
-const VERSION = "v7-replay";
+const VERSION = "v8-fossil-art";
 const CACHE = "kyoryu-keisan-" + VERSION;
 const CORE = [
   "./",
@@ -31,7 +31,23 @@ const CORE = [
   "./assets/art/steg.webp",
   "./assets/art/treasure.webp",
   "./assets/art/tri.webp",
-  "./assets/art/volcano.webp"
+  "./assets/art/volcano.webp",
+  "./assets/art/fossil-steg.webp",
+  "./assets/art/fossil-tri.webp",
+  "./assets/art/fossil-anky.webp",
+  "./assets/art/fossil-para.webp",
+  "./assets/art/fossil-brachio.webp",
+  "./assets/art/fossil-ptera.webp",
+  "./assets/art/fossil-spino.webp",
+  "./assets/art/fossil-rex.webp",
+  "./assets/art/gold-egg.webp",
+  "./assets/art/medal-bronze.webp",
+  "./assets/art/medal-silver.webp",
+  "./assets/art/medal-gold.webp",
+  "./assets/art/chest-open.webp",
+  "./assets/art/stopwatch.webp",
+  "./assets/art/flag.webp",
+  "./assets/art/map.webp"
 ];
 
 self.addEventListener("install", e => {
