@@ -1,0 +1,369 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>きょうりゅう けいさん</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+<style>
+/* Layout: ジャングルの地面(下)と空(上)。ホーム=左に恐竜の巣・右にステージ。クイズ=左に問題・右に大きな数字パッド */
+:root{
+  color-scheme: light;
+  --sky:#e4f3ea;        /* 朝もやのジャングル */
+  --leaf:#3f8f5a;       /* 葉っぱ */
+  --leaf-deep:#1f4a33;  /* 森の影=文字色 */
+  --ground:#c99a5b;     /* 地面 */
+  --lava:#f06a2c;       /* 火山オレンジ=アクセント */
+  --sun:#ffcb3d;        /* 星 */
+  --card:#fffdf6;
+  --dino:#6cc070; --dino-dark:#3f8f5a; --belly:#e8f7c9;
+  --egg:#f6ecd6; --egg-spot:#c7b38a;
+  --red-soft:#f6b0a0;
+  --display:"Dela Gothic One","Zen Maru Gothic","Hiragino Maru Gothic ProN","Meiryo",sans-serif;
+  --body:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Meiryo",sans-serif;
+}
+html,body{height:100%}
+body{margin:0;background:var(--sky);color:var(--leaf-deep);font-family:var(--body);font-weight:700;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overflow:hidden}
+button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+button:focus-visible{outline:4px solid var(--lava);outline-offset:3px}
+.app{height:100%;display:flex;flex-direction:column;padding-inline:16px;box-sizing:border-box;
+  background:
+    radial-gradient(120% 60% at 10% -10%, #fff8 0, transparent 60%),
+    linear-gradient(to bottom, var(--sky) 0 78%, #d5ead9 78% 100%);}
+.screen{flex:1;min-height:0;display:flex;flex-direction:column;padding-block:14px;gap:14px;overflow:auto}
+
+/* ---------- header ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.logo{font-family:var(--display);font-size:clamp(22px,3.2vw,34px);letter-spacing:.04em;margin:0;line-height:1.1}
+.logo span{color:var(--lava)}
+.pill{background:var(--card);border-radius:999px;padding:8px 16px;display:flex;align-items:center;gap:8px;
+  box-shadow:0 3px 0 #0001;font-size:18px}
+.pill b{font-family:var(--display);font-weight:400;font-size:22px;font-variant-numeric:tabular-nums}
+
+/* ---------- home ---------- */
+.home{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;flex:1;min-height:0}
+.nest{background:var(--card);border-radius:28px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;
+  box-shadow:0 6px 0 #1f4a3318;position:relative;overflow:hidden}
+.nest::after{content:"";position:absolute;left:0;right:0;bottom:0;height:22%;background:linear-gradient(#d9b57f,var(--ground));z-index:0}
+.nest > *{position:relative;z-index:1}
+.dino-name{font-size:20px;margin:0}
+.dino-box{width:min(100%,300px);aspect-ratio:1;max-width:100%}
+.dino-box svg{width:100%;height:100%;display:block}
+.grow{width:100%;max-width:360px;background:#fff;border-radius:16px;padding:10px 14px;box-sizing:border-box}
+.grow-label{display:flex;justify-content:space-between;font-size:16px;margin-bottom:6px}
+.bar{height:18px;border-radius:9px;background:#e9e2cf;overflow:hidden}
+.bar i{display:block;height:100%;background:repeating-linear-gradient(45deg,var(--lava) 0 12px,#f58a52 12px 24px);border-radius:9px;transition:width .6s}
+
+.side{display:flex;flex-direction:column;gap:14px;min-width:0}
+.stages{display:flex;flex-direction:column;gap:12px}
+.stage{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;text-align:left;
+  background:var(--card);border:0;border-radius:22px;padding:14px 18px;box-shadow:0 6px 0 var(--leaf);transition:transform .1s}
+.stage:active{transform:translateY(4px);box-shadow:0 2px 0 var(--leaf)}
+.stage .sym{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-family:var(--display);font-size:34px;color:#fff;background:var(--leaf)}
+.stage.sub .sym{background:#3a7bb8}
+.stage.mix .sym{background:var(--lava);font-size:24px}
+.stage .t{font-size:22px;line-height:1.2}
+.stage .t small{display:block;font-size:15px;opacity:.7;font-weight:500}
+.stars{display:flex;gap:2px}
+.stars svg{width:26px;height:26px}
+
+.stamp{background:var(--card);border-radius:22px;padding:14px 18px;box-shadow:0 6px 0 #1f4a3318}
+.stamp h2{margin:0 0 8px;font-size:18px;display:flex;justify-content:space-between}
+.stamp h2 small{font-weight:500;opacity:.7}
+.stamp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.stamp-grid span{aspect-ratio:1;border-radius:50%;border:3px dashed #d4cbb4;display:grid;place-items:center}
+.stamp-grid span.on{border:0;background:var(--lava)}
+.stamp-grid svg{width:70%;height:70%}
+
+/* ---------- quiz ---------- */
+.qtop{display:flex;align-items:center;gap:14px}
+.quit{border:0;background:var(--card);border-radius:14px;padding:10px 14px;font-size:16px;box-shadow:0 3px 0 #0001}
+.steps{display:flex;gap:4px;flex:1;justify-content:center;flex-wrap:wrap}
+.steps svg{width:clamp(22px,3.4vw,36px);height:auto}
+.quiz{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;flex:1;min-height:0}
+.board{background:var(--card);border-radius:28px;padding:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;box-shadow:0 6px 0 #1f4a3318;min-width:0}
+.eq{font-family:var(--display);font-size:clamp(52px,8vw,96px);line-height:1;display:flex;align-items:center;gap:.25em;flex-wrap:wrap;justify-content:center;font-variant-numeric:tabular-nums}
+.eq .op{color:var(--lava)}
+.eq .box{min-width:1.3em;height:1.25em;border:6px solid var(--leaf-deep);border-radius:.2em;display:grid;place-items:center;padding:0 .1em;background:#fff}
+.eq .box.ok{border-color:var(--leaf);color:var(--leaf)}
+.eq .box.ng{border-color:var(--lava);animation:shake .4s}
+.say{border:0;background:#e3efe6;border-radius:999px;padding:8px 16px;font-size:16px;display:flex;align-items:center;gap:6px}
+.say svg{width:22px;height:22px}
+.hint{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;min-height:34px;align-items:center}
+.hint i{width:28px;height:28px;border-radius:50%;display:block;background:var(--leaf)}
+.hint i.b{background:#3a7bb8}
+.hint i.x{background:#d8d0bc;position:relative}
+.hint i.x::after{content:"";position:absolute;inset:-2px 12px;background:var(--lava);transform:rotate(45deg);border-radius:2px}
+.hint .gap{width:14px}
+.msg{font-size:clamp(20px,2.6vw,28px);min-height:1.4em;text-align:center;margin:0}
+.mini{width:110px;height:110px}
+.mini svg{width:100%;height:100%}
+.hop{animation:hop .55s}
+@keyframes hop{0%,100%{transform:translateY(0)}40%{transform:translateY(-26px) rotate(-4deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-content:center;min-width:0}
+.key{border:0;border-radius:20px;background:#fff;font-family:var(--display);font-size:clamp(28px,4vw,44px);
+  min-height:68px;box-shadow:0 6px 0 #bfb59d;transition:transform .08s}
+.key:active{transform:translateY(4px);box-shadow:0 2px 0 #bfb59d}
+.key.del{font-family:var(--body);font-size:20px;background:#efe8d6}
+.key.go{grid-column:1/-1;background:var(--lava);color:#fff;font-family:var(--body);font-size:26px;box-shadow:0 6px 0 #b9461a}
+.key.go:active{box-shadow:0 2px 0 #b9461a}
+.key:disabled{opacity:.4}
+
+/* ---------- result ---------- */
+.result{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center}
+.result h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,5vw,56px);margin:0}
+.big-stars{display:flex;gap:10px}
+.big-stars svg{width:clamp(56px,8vw,90px);height:auto}
+.big-stars svg.on{animation:pop .5s backwards}
+.big-stars svg:nth-child(2){animation-delay:.25s}.big-stars svg:nth-child(3){animation-delay:.5s}
+@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+.food{font-size:22px;background:var(--card);border-radius:999px;padding:8px 20px}
+.note{font-size:20px;margin:0;max-width:30em}
+.btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.btn{border:0;border-radius:20px;padding:16px 28px;font-size:22px;background:var(--card);box-shadow:0 6px 0 #bfb59d}
+.btn.main{background:var(--leaf);color:#fff;box-shadow:0 6px 0 var(--leaf-deep)}
+.btn:active{transform:translateY(4px)}
+
+@media (max-width:760px){
+  body{overflow:auto}
+  .home,.quiz{grid-template-columns:1fr}
+  .dino-box{width:min(100%,220px)}
+  .key{min-height:56px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head><body>
+
+<div class="app" id="app"></div>
+
+<script>
+(()=>{
+/* ================= 保存 ================= */
+const KEY="kyoryu-sansu-v1";
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();};
+let S={food:0,stars:{add:0,sub:0,mix:0},days:[],mistakes:[],cardDone:0,day:{date:"",rounds:0}};
+try{const raw=localStorage.getItem(KEY);if(raw)S=Object.assign(S,JSON.parse(raw));}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
+if(S.day.date!==today())S.day={date:today(),rounds:0};
+
+/* ================= 恐竜 ================= */
+const GROW=[{n:"たまご",at:0},{n:"ひびの はいった たまご",at:10},{n:"あかちゃん きょうりゅう",at:30},{n:"こども きょうりゅう",at:60},{n:"おとな きょうりゅう",at:100}];
+const stageOf=f=>{let s=0;GROW.forEach((g,i)=>{if(f>=g.at)s=i;});return s;};
+
+function dinoSVG(st){
+  if(st<=1){
+    const crack=st===1?`<path d="M58 108 l14 -12 l12 14 l14 -14 l14 12 l14 -14 l16 14" fill="none" stroke="#7a6748" stroke-width="5" stroke-linejoin="round"/>
+      <circle cx="88" cy="128" r="6" fill="#1f4a33"/><circle cx="114" cy="128" r="6" fill="#1f4a33"/>`:"";
+    return `<svg viewBox="0 0 200 200" aria-hidden="true">
+      <ellipse cx="100" cy="182" rx="56" ry="10" fill="#0002"/>
+      <path d="M100 30 C150 30 160 120 152 145 C145 172 125 182 100 182 C75 182 55 172 48 145 C40 120 50 30 100 30Z" fill="var(--egg)" stroke="#d9c9a4" stroke-width="4"/>
+      <ellipse cx="80" cy="70" rx="10" ry="13" fill="var(--egg-spot)"/><ellipse cx="124" cy="92" rx="8" ry="10" fill="var(--egg-spot)"/>
+      <ellipse cx="96" cy="150" rx="12" ry="9" fill="var(--egg-spot)"/><ellipse cx="136" cy="140" rx="6" ry="7" fill="var(--egg-spot)"/>
+      <ellipse cx="78" cy="52" rx="9" ry="5" fill="#fff9" transform="rotate(-30 78 52)"/>
+      ${crack}</svg>`;
+  }
+  const sc=[0,0,.68,.84,1][st];
+  const spikes=st===2?[]:st===3?[[78,92],[98,90],[118,96]]:[[64,98],[82,90],[100,88],[118,92],[132,82]];
+  const sp=spikes.map(([x,y])=>`<path d="M${x-9} ${y+8} L${x} ${y-12} L${x+9} ${y+8}Z" fill="var(--lava)"/>`).join("");
+  const eyeR=st===2?8:6;
+  return `<svg viewBox="0 0 200 200" aria-hidden="true">
+    <ellipse cx="100" cy="186" rx="${60*sc+10}" ry="9" fill="#0002"/>
+    <g transform="translate(${100-100*sc} ${188-188*sc}) scale(${sc})">
+      ${sp}
+      <path d="M58 128 Q18 132 10 104 Q40 126 74 112Z" fill="var(--dino)"/>
+      <ellipse cx="95" cy="128" rx="46" ry="36" fill="var(--dino)"/>
+      <path d="M112 118 Q118 86 130 78 L158 92 Q146 112 134 136Z" fill="var(--dino)"/>
+      <ellipse cx="145" cy="76" rx="32" ry="26" fill="var(--dino)"/>
+      <ellipse cx="100" cy="138" rx="28" ry="20" fill="var(--belly)"/>
+      <rect x="70" y="150" width="17" height="30" rx="7" fill="var(--dino-dark)"/>
+      <rect x="106" y="150" width="17" height="30" rx="7" fill="var(--dino-dark)"/>
+      <path d="M128 118 q12 4 10 14" stroke="var(--dino-dark)" stroke-width="7" stroke-linecap="round" fill="none"/>
+      <circle cx="154" cy="68" r="${eyeR}" fill="#1f4a33"/><circle cx="${156+eyeR/4}" cy="${66-eyeR/4}" r="${eyeR/3}" fill="#fff"/>
+      <path d="M160 86 q10 6 16 -2" stroke="#1f4a33" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <ellipse cx="146" cy="88" rx="7" ry="4" fill="#f6a38c" opacity=".8"/>
+      <circle cx="172" cy="74" r="2.5" fill="#1f4a33"/>
+    </g></svg>`;
+}
+const starSVG=on=>`<svg viewBox="0 0 24 24" class="${on?"on":""}" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z" fill="${on?"var(--sun)":"#e2dccb"}" stroke="${on?"#e0a400":"#cfc7b2"}" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+const footSVG=state=>{const c=state==="ok"?"var(--leaf)":state==="now"?"var(--lava)":"#d4cbb4";
+  return `<svg viewBox="0 0 30 34" aria-hidden="true"><ellipse cx="15" cy="22" rx="9" ry="10" fill="${c}"/><ellipse cx="5" cy="9" rx="4" ry="6" fill="${c}" transform="rotate(-20 5 9)"/><ellipse cx="15" cy="5" rx="4" ry="5.5" fill="${c}"/><ellipse cx="25" cy="9" rx="4" ry="6" fill="${c}" transform="rotate(20 25 9)"/></svg>`;};
+const meat=`<svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><path d="M8 24 L4 28" stroke="#f3ead6" stroke-width="5" stroke-linecap="round"/><circle cx="3.5" cy="28.5" r="3" fill="#f3ead6"/><ellipse cx="18" cy="14" rx="12" ry="10" fill="#c4553a" transform="rotate(-40 18 14)"/><ellipse cx="20" cy="11" rx="5" ry="3" fill="#e98a6c" transform="rotate(-40 20 11)"/></svg>`;
+const spk=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
+
+/* ================= 音 ================= */
+let ac=null;
+function tone(seq){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();let t=ac.currentTime;
+  seq.forEach(([f,d])=>{const o=ac.createOscillator(),g=ac.createGain();o.type="triangle";o.frequency.value=f;
+    g.gain.setValueAtTime(.18,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+d);t+=d*.8;});}catch(e){}}
+const sOk=()=>tone([[660,.12],[880,.12],[1175,.22]]);
+const sNg=()=>tone([[392,.18],[349,.22]]);
+const sFan=()=>tone([[523,.15],[659,.15],[784,.15],[1047,.35]]);
+function speak(t){try{const u=new SpeechSynthesisUtterance(t);u.lang="ja-JP";u.rate=.9;
+  const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.startsWith("ja"));if(v)u.voice=v;
+  speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+
+/* ================= 問題 ================= */
+const MODES={add:{name:"たしざん",sub:"10までの たしざん",sym:"+"},sub:{name:"ひきざん",sub:"10までの ひきざん",sym:"−"},mix:{name:"まぜこぜ",sub:"たしざんと ひきざん",sym:"+−"}};
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+function makeQ(op){
+  if(op==="add"){const s=rnd(2,10),a=rnd(1,s-1);return{a,op:"+",b:s-a};}
+  const a=rnd(2,10),b=rnd(1,a-1+(Math.random()<.15?1:0));return{a,op:"-",b};
+}
+function makeSet(mode){
+  const qs=[],key=q=>q.a+q.op+q.b;
+  const pool=S.mistakes.filter(m=>mode==="mix"||(mode==="add")===(m.op==="+")).slice(0,3);
+  pool.forEach(m=>qs.push({...m,review:true}));
+  let guard=0;
+  while(qs.length<10&&guard++<500){
+    const op=mode==="mix"?(Math.random()<.5?"add":"sub"):mode;const q=makeQ(op);
+    if(qs.length&&key(qs[qs.length-1])===key(q))continue;
+    if(qs.filter(x=>key(x)===key(q)).length)continue;
+    qs.push(q);
+  }
+  for(let i=qs.length-1;i>0;i--){const j=rnd(0,i);[qs[i],qs[j]]=[qs[j],qs[i]];}
+  return qs;
+}
+const ans=q=>q.op==="+"?q.a+q.b:q.a-q.b;
+const readQ=q=>`${q.a} ${q.op==="+"?"たす":"ひく"} ${q.b} は?`;
+
+/* ================= 画面 ================= */
+const app=document.getElementById("app");
+let R=null; // round state
+
+function home(){
+  const st=stageOf(S.food),next=GROW[st+1];
+  const pct=next?Math.round((S.food-GROW[st].at)/(next.at-GROW[st].at)*100):100;
+  const stamps=S.days.length-S.cardDone*10;
+  const goalDone=S.day.rounds>0;
+  app.innerHTML=`<section class="screen">
+    <div class="top"><h1 class="logo">きょうりゅう <span>けいさん</span></h1>
+      <div class="pill">${meat} ごはん <b>${S.food}</b></div></div>
+    <div class="home">
+      <div class="nest">
+        <p class="dino-name">${GROW[st].n}</p>
+        <div class="dino-box" id="dino">${dinoSVG(st)}</div>
+        <div class="grow"><div class="grow-label"><span>せいちょう</span><span>${next?`つぎまで あと ${next.at-S.food}`:"いちばん おおきく なったよ!"}</span></div>
+          <div class="bar"><i style="width:${pct}%"></i></div></div>
+      </div>
+      <div class="side">
+        <div class="stages">${Object.entries(MODES).map(([k,m])=>`
+          <button class="stage ${k}" data-mode="${k}"><span class="sym">${m.sym}</span>
+            <span class="t">${m.name}<small>${m.sub}</small></span>
+            <span class="stars">${[1,2,3].map(i=>starSVG(S.stars[k]>=i)).join("")}</span></button>`).join("")}
+        </div>
+        <div class="stamp"><h2>スタンプカード <small>${goalDone?"きょうの スタンプ ゲット!":"1かい あそぶと 1こ"}</small></h2>
+          <div class="stamp-grid">${Array.from({length:10},(_,i)=>`<span class="${i<stamps?"on":""}">${i<stamps?footSVG("x").replace(/#d4cbb4/g,"#fff"):""}</span>`).join("")}</div>
+          <p style="margin:8px 0 0;font-size:15px;font-weight:500">10こ たまると ごはん 10こ プレゼント</p></div>
+      </div>
+    </div></section>`;
+  app.querySelectorAll(".stage").forEach(b=>b.onclick=()=>start(b.dataset.mode));
+  const d=document.getElementById("dino");d.onclick=()=>{d.classList.remove("hop");void d.offsetWidth;d.classList.add("hop");tone([[523,.1],[784,.15]]);};
+}
+
+function start(mode){
+  R={mode,qs:makeSet(mode),i:0,input:"",tries:0,firstOk:0,food:0,lock:false};
+  quiz();
+}
+
+function quiz(){
+  const q=R.qs[R.i];
+  app.innerHTML=`<section class="screen">
+    <div class="qtop"><button class="quit" id="quit">おうちに もどる</button>
+      <div class="steps">${R.qs.map((x,i)=>footSVG(i<R.i?"ok":i===R.i?"now":"")).join("")}</div></div>
+    <div class="quiz">
+      <div class="board">
+        <div class="eq"><span>${q.a}</span><span class="op">${q.op==="+"?"+":"−"}</span><span>${q.b}</span><span>=</span><span class="box" id="box">${R.input||"&nbsp;"}</span></div>
+        <div class="hint" id="hint"></div>
+        <p class="msg" id="msg">${q.review?"まえに まちがえた もんだいだよ":""}</p>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="mini" id="mini">${dinoSVG(Math.max(2,stageOf(S.food)))}</div>
+          <button class="say" id="say">${spk} よみあげ</button>
+        </div>
+      </div>
+      <div class="pad">
+        ${[7,8,9,4,5,6,1,2,3].map(n=>`<button class="key" data-n="${n}">${n}</button>`).join("")}
+        <button class="key del" data-n="del">けす</button><button class="key" data-n="0">0</button><button class="key del" data-n="hint">ヒント</button>
+        <button class="key go" id="go">こたえる</button>
+      </div>
+    </div></section>`;
+  document.getElementById("quit").onclick=home;
+  document.getElementById("say").onclick=()=>speak(readQ(q));
+  app.querySelectorAll(".key[data-n]").forEach(b=>b.onclick=()=>press(b.dataset.n));
+  document.getElementById("go").onclick=check;
+}
+
+function showHint(q){
+  const h=document.getElementById("hint");let s="";
+  if(q.op==="+")s="<i></i>".repeat(q.a)+'<span class="gap"></span>'+'<i class="b"></i>'.repeat(q.b);
+  else s="<i></i>".repeat(q.a-q.b)+'<i class="x"></i>'.repeat(q.b);
+  h.innerHTML=s;
+}
+
+function press(n){
+  if(R.lock)return;
+  if(n==="del")R.input=R.input.slice(0,-1);
+  else if(n==="hint"){showHint(R.qs[R.i]);return;}
+  else if(R.input.length<2)R.input=(R.input==="0"?"":R.input)+n;
+  const box=document.getElementById("box");box.className="box";box.innerHTML=R.input||"&nbsp;";
+}
+
+function check(){
+  if(R.lock||R.input==="")return;
+  const q=R.qs[R.i],box=document.getElementById("box"),msg=document.getElementById("msg"),mini=document.getElementById("mini");
+  if(+R.input===ans(q)){
+    R.lock=true;box.className="box ok";sOk();
+    mini.classList.remove("hop");void mini.offsetWidth;mini.classList.add("hop");
+    msg.textContent=["せいかい!","すごい!","やったね!","ばっちり!"][rnd(0,3)];
+    R.food++;
+    if(R.tries===0){R.firstOk++;if(q.review)S.mistakes=S.mistakes.filter(m=>!(m.a===q.a&&m.b===q.b&&m.op===q.op));}
+    setTimeout(next,1100);
+  }else{
+    R.tries++;sNg();box.className="box ng";
+    if(!S.mistakes.some(m=>m.a===q.a&&m.b===q.b&&m.op===q.op)){S.mistakes.unshift({a:q.a,op:q.op,b:q.b});S.mistakes=S.mistakes.slice(0,20);}
+    if(R.tries===1){msg.textContent="おしい! もういちど やってみよう";showHint(q);R.input="";setTimeout(()=>{if(!R.lock){box.className="box";box.innerHTML="&nbsp;";}},500);}
+    else{R.lock=true;showHint(q);box.className="box ok";box.textContent=ans(q);
+      msg.textContent=`こたえは ${ans(q)} だよ。つぎは できるよ!`;R.food++;setTimeout(next,2400);}
+  }
+}
+
+function next(){
+  R.i++;R.input="";R.tries=0;R.lock=false;
+  if(R.i>=R.qs.length)result();else quiz();
+}
+
+function result(){
+  const before=stageOf(S.food);
+  const stars=R.firstOk>=10?3:R.firstOk>=8?2:1;
+  S.stars[R.mode]=Math.max(S.stars[R.mode]||0,stars);
+  S.food+=R.food;
+  let bonus=false;
+  if(!S.days.includes(today())){S.days.push(today());
+    if(S.days.length-S.cardDone*10>=10){S.cardDone++;S.food+=10;bonus=true;}}
+  S.day.rounds++;save();
+  const after=stageOf(S.food),grew=after>before;
+  app.innerHTML=`<section class="screen"><div class="result">
+    <h2>${R.firstOk>=10?"パーフェクト!":"よく がんばったね!"}</h2>
+    <div class="big-stars">${[1,2,3].map(i=>starSVG(i<=stars)).join("")}</div>
+    <div class="food">${meat} ごはん +${R.food}${bonus?" / スタンプボーナス +10":""}</div>
+    <div class="dino-box" style="width:min(60vw,200px)" id="rd">${dinoSVG(after)}</div>
+    ${grew?`<p class="note" style="color:var(--lava)">${GROW[after].n}に せいちょうした!</p>`:""}
+    ${S.day.rounds>=3?`<p class="note">きょうは たくさん がんばったね。また あした あそぼう!</p>`:""}
+    <div class="btns"><button class="btn" id="home">おうちへ</button><button class="btn main" id="again">もういちど</button></div>
+  </div></section>`;
+  sFan();if(grew)setTimeout(()=>{document.getElementById("rd")?.classList.add("hop");sFan();},900);
+  document.getElementById("home").onclick=home;
+  document.getElementById("again").onclick=()=>start(R.mode);
+}
+
+document.addEventListener("keydown",e=>{
+  if(!R||!document.getElementById("go"))return;
+  if(/^[0-9]$/.test(e.key))press(e.key);
+  else if(e.key==="Backspace")press("del");
+  else if(e.key==="Enter"){e.preventDefault();check();}
+});
+
+home();
+})();
+</script>
+</body></html>
