@@ -71,7 +71,7 @@ const fromOld=m=>m.op==="+"?plus(m.a,m.b,"s2"):minus(m.a,m.b,"s3");
 
 /* ================= 保存 ================= */
 const KEY="kyoryu-sansu-slots",OLD_KEY="kyoryu-sansu-v1",SLOTS=3;
-const DEF_SET={sound:true,autoRead:false,goal:1,max:3,allOpen:false};
+const DEF_SET={sound:true,autoRead:false,goal:1,max:3,allOpen:false,seVol:.85,voiceVol:.6};
 const blank=name=>({name,food:0,stars:{},days:[],mistakes:[],cardDone:0,day:{date:"",rounds:0},zukan:[],stats:{},log:{},set:{...DEF_SET},
   plays:{},best:{},fossils:{},mission:null,partner:null});
 function upgrade(s,i){
@@ -107,17 +107,31 @@ function pick(i){
 const unlocked=i=>!S||S.set.allOpen||i===0||(S.stars[STAGES[i-1].id]||0)>=1||(S.stars[STAGES[i].id]||0)>=1;
 
 /* ================= 音・読み上げ ================= */
-let ac=null;
+let ac=null,master=null;
 const soundOn=()=>!S||S.set.sound;
-function tone(seq){if(!soundOn())return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();let t=ac.currentTime;
-  seq.forEach(([f,d])=>{const o=ac.createOscillator(),g=ac.createGain();o.type="triangle";o.frequency.value=f;
-    g.gain.setValueAtTime(.16,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+d);t+=d*.8;});}catch(e){}}
+const seVol=()=>S&&S.set.seVol!=null?S.set.seVol:DEF_SET.seVol;
+const voiceVol=()=>S&&S.set.voiceVol!=null?S.set.voiceVol:DEF_SET.voiceVol;
+function audio(){
+  if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();
+    const comp=ac.createDynamicsCompressor();comp.threshold.value=-14;comp.knee.value=10;comp.ratio.value=4;comp.attack.value=.003;comp.release.value=.15;
+    master=ac.createGain();master.connect(comp).connect(ac.destination);}
+  if(ac.state==="suspended")ac.resume();
+  master.gain.value=seVol()*1.6;
+  return ac;
+}
+/* 効果音:タブレットやノートPCの小さなスピーカーでも聞こえるよう、低すぎる音は1オクターブ上げ、倍音を足す */
+function tone(seq,force){if(!force&&!soundOn())return;try{const a=audio();let t=a.currentTime+.01;
+  seq.forEach(([f,d])=>{while(f<220)f*=2;
+    const g=a.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.5,t+.008);g.gain.exponentialRampToValueAtTime(.001,t+d+.04);g.connect(master);
+    const o=a.createOscillator();o.type="triangle";o.frequency.value=f;o.connect(g);
+    const o2=a.createOscillator(),g2=a.createGain();o2.type="sine";o2.frequency.value=f*2;g2.gain.value=.3;o2.connect(g2).connect(g);
+    [o,o2].forEach(x=>{x.start(t);x.stop(t+d+.06);});t+=d*.8;});}catch(e){}}
 const sTap=()=>tone([[660,.06]]);
 const sOk=()=>tone([[660,.11],[880,.11],[1175,.2]]);
 const sNg=()=>tone([[392,.16],[349,.2]]);
 const sFan=()=>tone([[523,.14],[659,.14],[784,.14],[1047,.32]]);
 const sNew=()=>tone([[784,.12],[988,.12],[1175,.12],[1568,.36]]);
-function speak(t){try{const u=new SpeechSynthesisUtterance(t);u.lang="ja-JP";u.rate=.9;
+function speak(t){try{const u=new SpeechSynthesisUtterance(t);u.lang="ja-JP";u.rate=.9;u.volume=voiceVol();
   const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.startsWith("ja"));if(v)u.voice=v;
   speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
 try{speechSynthesis.getVoices();}catch(e){}
@@ -839,6 +853,8 @@ function parent(){
       </div>
       <div class="p-card"><h2>設定</h2>
         ${sw("sound",S.set.sound,"効果音")}
+        <div class="set-row vol"><label for="seVol">効果音の大きさ</label><input type="range" id="seVol" min="0" max="100" step="5" value="${Math.round(seVol()*100)}"><button class="vtest" id="seTest">ためす</button></div>
+        <div class="set-row vol"><label for="voiceVol">読み上げの声の大きさ</label><input type="range" id="voiceVol" min="0" max="100" step="5" value="${Math.round(voiceVol()*100)}"><button class="vtest" id="voTest">ためす</button></div>
         ${sw("autoRead",S.set.autoRead,"問題を自動で読み上げる")}
         ${sel("goal",S.set.goal,[[1,"1回"],[2,"2回"],[3,"3回"]],"1日の目標回数")}
         ${sel("max",S.set.max,[[2,"2回"],[3,"3回"],[5,"5回"],[0,"表示しない"]],"「今日はここまで」を出す回数")}
@@ -850,6 +866,11 @@ function parent(){
   document.getElementById("back").onclick=home;
   app.querySelectorAll("[data-sw]").forEach(b=>b.onclick=()=>{const k=b.dataset.sw;S.set[k]=!S.set[k];b.setAttribute("aria-checked",S.set[k]);save();});
   ["goal","max"].forEach(id=>document.getElementById(id).onchange=e=>{S.set[id]=+e.target.value;save();});
+  const seIn=document.getElementById("seVol"),voIn=document.getElementById("voiceVol");
+  seIn.oninput=()=>{S.set.seVol=+seIn.value/100;save();};seIn.onchange=()=>sOk();
+  voIn.oninput=()=>{S.set.voiceVol=+voIn.value/100;save();};voIn.onchange=()=>speak("7 たす 5 は?");
+  document.getElementById("seTest").onclick=()=>{tone([[660,.11],[880,.11],[1175,.2]],true);};
+  document.getElementById("voTest").onclick=()=>speak("7 たす 5 は?");
   document.getElementById("rename").onchange=e=>{const v=e.target.value.trim().slice(0,8);if(v){S.name=v;save();}};
 }
 

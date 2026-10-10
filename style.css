@@ -566,3 +566,9 @@ td.r,th.r{text-align:right}
 @keyframes roarshake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(2px)}40%,80%{transform:translateX(-2px)}}
 .posed.sleep .zzz{top:46%;right:12%}
 .flyer{width:76px}
+
+/* 音量 */
+.set-row.vol input[type=range]{flex:1;min-width:120px;accent-color:var(--leaf)}
+.set-row.vol label{min-width:9em}
+.vtest{border:0;border-radius:10px;background:var(--muted);padding:6px 12px;font-size:14px}
+.set-row.vol label{flex:none;width:11em;min-width:0}

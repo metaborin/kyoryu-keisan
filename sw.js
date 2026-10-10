@@ -1,6 +1,6 @@
 // きょうりゅう けいさん Service Worker
 // 更新したら VERSION を上げる
-const VERSION = "v11b-pose-art";
+const VERSION = "v12-sound";
 const CACHE = "kyoryu-keisan-" + VERSION;
 const CORE = [
   "./",
