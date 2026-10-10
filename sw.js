@@ -1,6 +1,6 @@
 // きょうりゅう けいさん Service Worker
 // 更新したら VERSION を上げる
-const VERSION = "v8b-fossil-art";
+const VERSION = "v9-idle";
 const CACHE = "kyoryu-keisan-" + VERSION;
 const CORE = [
   "./",

@@ -271,7 +271,7 @@ function home(){
     <div class="home">
       <div class="nest">
         <p class="dino-name">${esc(S.name)}の ${GROW[st].n}</p>
-        <div class="dino-wrap"><div class="dino-box" id="dino">${dinoArt(st)}</div><div class="bubble" id="bub"></div></div>
+        <div class="dino-wrap ${st<=1?"is-egg":""}" id="dwrap"><div class="dino-box" id="dino"><div class="idle"><div class="act" id="act">${dinoArt(st)}</div></div></div><div class="zzz" aria-hidden="true"><i>z</i><i>z</i><i>Z</i></div><div class="bubble" id="bub"></div></div>
         <div class="grow"><div class="grow-label"><span>せいちょう</span><span>${next?`つぎまで ごはん あと ${next.at-S.food}`:"いちばん おおきく なったよ!"}</span></div>
           <div class="bar"><i style="width:${pct}%"></i></div></div>
       </div>
@@ -297,8 +297,34 @@ function home(){
   document.getElementById("toReview").onclick=()=>{sTap();start("review","review");};
   document.getElementById("toTitle").onclick=title;
   const d=document.getElementById("dino"),b=document.getElementById("bub");
-  d.onclick=()=>{hopEl(d);tone([[523,.1],[784,.15]]);sayBubble(b,pickOne(LINES));};
+  d.onclick=()=>{const w=document.getElementById("dwrap");if(w&&w.classList.contains("sleep")){w.classList.remove("sleep");idleKick();sayBubble(b,"あっ、おはよう!");hopEl(d);tone([[659,.1],[880,.15]]);return;}
+    idleKick();hopEl(d);tone([[523,.1],[784,.15]]);sayBubble(b,pickOne(LINES));};
+  startIdle(st);
   bindHold(document.getElementById("toParent"),1500,parent);
+}
+
+
+/* ---- ホームの恐竜の ひとりあそび ---- */
+const IDLE_LINES=["おなか すいたなあ","けいさん しようよ!","ふわぁ…","なにして あそぶ?","きょうも ぼうけんだ!","たまご ころころ…","ガオー!","いい てんきだね"];
+let idleT=0,idleLast=0;
+function idleKick(){idleLast=performance.now();}
+function startIdle(st){
+  clearTimeout(idleT);idleLast=performance.now();if(REDUCE)return;
+  const egg=st<=1;
+  const acts=egg?["wobble","wobble","rock","peek"]:["look","sway","stretch","stomp","tail","look","sway"];
+  const loop=()=>{
+    const w=document.getElementById("dwrap"),a=document.getElementById("act");
+    if(!w||!a)return;
+    const idleFor=performance.now()-idleLast;
+    if(idleFor>30000&&!w.classList.contains("sleep")){w.classList.add("sleep");a.className="act";}
+    if(!w.classList.contains("sleep")){
+      const act=pickOne(acts);a.className="act";void a.offsetWidth;a.classList.add("a-"+act);
+      if(act==="stomp")setTimeout(()=>tone([[110,.08],[98,.1]]),350);
+      if(Math.random()<.3)sayBubble(document.getElementById("bub"),egg?pickOne(["コトコト…","もうすぐ うまれるかな?","ころん"]):pickOne(IDLE_LINES));
+    }
+    idleT=setTimeout(loop,3500+Math.random()*3500);
+  };
+  idleT=setTimeout(loop,1800);
 }
 
 /* ================= ちず ================= */
