@@ -572,3 +572,10 @@ td.r,th.r{text-align:right}
 .set-row.vol label{min-width:9em}
 .vtest{border:0;border-radius:10px;background:var(--muted);padding:6px 12px;font-size:14px}
 .set-row.vol label{flex:none;width:11em;min-width:0}
+
+/* 巣は たまごの あいだだけ。恐竜になったら 足元の かげに */
+.dino-wrap:not(.is-egg)::before{display:none}
+.walker::before{content:"";position:absolute;left:18%;right:18%;bottom:-2%;height:9%;border-radius:50%;
+  background:radial-gradient(closest-side,#3d2e1a55,#3d2e1a22 60%,transparent);pointer-events:none}
+.is-egg .walker::before{display:none}
+.dino-wrap.sleep .walker::before{left:12%;right:12%}
