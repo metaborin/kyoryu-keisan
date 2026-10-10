@@ -72,10 +72,12 @@ const fromOld=m=>m.op==="+"?plus(m.a,m.b,"s2"):minus(m.a,m.b,"s3");
 /* ================= 保存 ================= */
 const KEY="kyoryu-sansu-slots",OLD_KEY="kyoryu-sansu-v1",SLOTS=3;
 const DEF_SET={sound:true,autoRead:false,goal:1,max:3,allOpen:false};
-const blank=name=>({name,food:0,stars:{},days:[],mistakes:[],cardDone:0,day:{date:"",rounds:0},zukan:[],stats:{},log:{},set:{...DEF_SET}});
+const blank=name=>({name,food:0,stars:{},days:[],mistakes:[],cardDone:0,day:{date:"",rounds:0},zukan:[],stats:{},log:{},set:{...DEF_SET},
+  plays:{},best:{},fossils:{},mission:null,partner:null});
 function upgrade(s,i){
   const o=Object.assign(blank("ぼうけんしゃ"+(i+1)),s||{});
   o.set=Object.assign({...DEF_SET},o.set||{});
+  ["plays","best","fossils"].forEach(k=>{if(!o[k]||typeof o[k]!=="object")o[k]={};});
   if(o.stars&&("add" in o.stars||"sub" in o.stars||"mix" in o.stars)){
     const st={};if(o.stars.add)st.s2=o.stars.add;if(o.stars.sub)st.s3=o.stars.sub;o.stars=st;
     Object.keys(st).forEach(k=>{const sp=SPECIES[STAGES.findIndex(x=>x.id===k)];if(sp&&!o.zukan.includes(sp.id))o.zukan.push(sp.id);});
@@ -198,15 +200,70 @@ function newSlot(i){
     DB.slots[i]=blank(name);persist();sFan();pick(i);};
 }
 
+/* ================= くりかえし あそびの しくみ ================= */
+const MEDALS=[{n:3,name:"どう",c:"#c98a4b"},{n:10,name:"ぎん",c:"#a9b4bf"},{n:25,name:"きん",c:"#e8b923"}];
+const medalOf=n=>{let m=-1;MEDALS.forEach((x,i)=>{if(n>=x.n)m=i;});return m;};
+const medalSVG=(i,size=28)=>{const m=MEDALS[i];return `<svg viewBox="0 0 32 40" width="${size}" height="${size*1.25}" aria-hidden="true"><path d="M9 0 L16 12 L23 0Z" fill="#3a7bb8"/><path d="M4 0 L12 14 L16 8 L10 0Z" fill="#e05a4f"/><path d="M28 0 L20 14 L16 8 L22 0Z" fill="#e05a4f"/><circle cx="16" cy="26" r="12" fill="${m.c}" stroke="#0002" stroke-width="2"/><circle cx="16" cy="26" r="7.5" fill="none" stroke="#fff8" stroke-width="2"/><path d="M16 21 l1.6 3.3 3.6.5 -2.6 2.5 .6 3.6 -3.2 -1.7 -3.2 1.7 .6 -3.6 -2.6 -2.5 3.6 -.5Z" fill="#fff9"/></svg>`;};
+const stageBest=id=>S.best[id]||(S.best[id]={time:0,speed:0,race:1});
+const cleared=id=>(S.stars[id]||0)>=1;
+const PER_Q={s1:6,s2:6,s3:6,s4:5,s5:10,s6:8,s7:9,s8:9};
+const rivalMs=(id,lv)=>Math.round(PER_Q[id]*10*1000*1.5*Math.pow(.88,lv-1));
+const fmtTime=s=>{s=Math.round(s);return s>=60?`${Math.floor(s/60)}ふん ${s%60}びょう`:`${s}びょう`;};
+
+/* ---- ミッション ---- */
+const MISSIONS=[
+  {id:"combo5",t:"れんぞく 5もん せいかい",ok:r=>r.maxCombo>=5},
+  {id:"star3",t:"ぼうけんで ほしを 3つ とる",ok:r=>r.mode==="adv"&&r.stars===3},
+  {id:"race",t:"レースで ライバルに かつ",ok:r=>r.mode==="race"&&r.won,need:true},
+  {id:"speed8",t:"60びょうで 8もん せいかい",ok:r=>r.mode==="speed"&&r.count>=8,need:true},
+  {id:"nohint",t:"ヒントを みないで さいごまで",ok:r=>r.mode!=="speed"&&r.finished&&!r.hintUsed},
+  {id:"q20",t:"きょう 20もん とく",ok:()=>(S.log[today()]||0)>=20},
+  {id:"two",t:"きょう 2かい あそぶ",ok:()=>S.day.rounds>=2},
+  {id:"choice3",t:"えらぶ もんだいで 3もん せいかい",ok:r=>r.choiceOk>=3},
+  {id:"gold",t:"きんの たまご もんだいに せいかい",ok:r=>r.goldOk}
+];
+const hashStr=s=>{let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;};
+const seeded=seed=>()=>{seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+function ensureMissions(){
+  if(S.mission&&S.mission.date===today())return;
+  const any=STAGES.some(s=>cleared(s.id));
+  const pool=MISSIONS.filter(m=>!m.need||any).map(m=>m.id);
+  const r=seeded(hashStr(today()+"|"+cur+"|"+S.name));
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+  S.mission={date:today(),list:pool.slice(0,3).map(id=>({id,done:false})),bonus:false};
+}
+function checkMissions(run){
+  ensureMissions();const got=[];
+  S.mission.list.forEach(m=>{if(m.done)return;const d=MISSIONS.find(x=>x.id===m.id);if(d&&d.ok(run)){m.done=true;got.push(d);S.food+=5;}});
+  let all=false;if(!S.mission.bonus&&S.mission.list.every(m=>m.done)){S.mission.bonus=true;all=true;}
+  return {got,all};
+}
+
+/* ---- かせき ---- */
+const fossilCount=id=>(S.fossils[id]||[]).length;
+const fossilTotal=()=>SPECIES.reduce((n,sp)=>n+fossilCount(sp.id),0);
+function rollFossil(prefer){
+  const missing=[];SPECIES.forEach(sp=>{const h=S.fossils[sp.id]||[];for(let p=0;p<4;p++)if(!h.includes(p))missing.push([sp.id,p]);});
+  if(!missing.length){S.food+=3;return null;}
+  const pref=missing.filter(m=>m[0]===prefer);
+  const [id,p]=pickOne(pref.length&&Math.random()<.5?pref:missing);
+  (S.fossils[id]=S.fossils[id]||[]).push(p);
+  return {id,p,complete:fossilCount(id)===4};
+}
+const fossilPiece=(id,p)=>`<span class="fp" style="background-image:url('${ART_ROOT}${id}.webp');background-position:${p%2?"100%":"0%"} ${p>1?"100%":"0%"}"></span>`;
+const fossilBoard=(id,cls="")=>`<div class="fboard ${cls} ${fossilCount(id)===4?"full":""}">${[0,1,2,3].map(p=>(S.fossils[id]||[]).includes(p)?fossilPiece(id,p):`<span class="fp empty"></span>`).join("")}</div>`;
+const spName=id=>{const sp=SPECIES.find(s=>s.id===id);return S.zukan.includes(id)?sp.name:"なぞの きょうりゅう";};
+
 /* ================= おうち ================= */
 function home(){
-  R=null;
+  stopRun();R=null;ensureMissions();save();
   const st=stageOf(S.food),next=GROW[st+1];
   const pct=next?Math.round((S.food-GROW[st].at)/(next.at-GROW[st].at)*100):100;
   const stamps=S.days.length-S.cardDone*10;
   const goal=S.set.goal,done=S.day.rounds;
-  const nextStage=STAGES.findIndex((s,i)=>unlocked(i)&&!(S.stars[s.id]>=1));
+  const nextStage=STAGES.findIndex((s,i)=>unlocked(i)&&!cleared(s.id));
   const tired=S.set.max>0&&done>=S.set.max;
+  const ms=S.mission.list.map(m=>({...m,d:MISSIONS.find(x=>x.id===m.id)})).filter(m=>m.d);
   app.innerHTML=`<section class="screen">
     <div class="top"><h1 class="logo">きょうりゅう <span>けいさん</span></h1>
       <div class="top-r"><div class="pill">${meat} ごはん <b>${S.food}</b></div>
@@ -220,11 +277,13 @@ function home(){
       </div>
       <div class="side">
         ${tired?`<p class="notice">きょうは たくさん がんばったね! つづきは あしたに しよう。</p>`:""}
-        <button class="go-adv" id="toMap">${mapSVG}<span class="t">ぼうけんに いく<small>${nextStage>=0?`つぎは「${STAGES[nextStage].name}」`:"ぜんぶの ステージを クリアしたよ!"}</small></span></button>
-        <div class="goal">きょうの もくひょう <span class="gd">${Array.from({length:goal},(_,i)=>`<i class="${i<done?"on":""}"></i>`).join("")}</span>
-          <span>${done>=goal?"たっせい!":`あと ${goal-done}かい`}</span></div>
+        <button class="go-adv" id="toMap">${mapSVG}<span class="t">ぼうけんに いく<small>${nextStage>=0?`つぎは「${STAGES[nextStage].name}」`:"すきな ステージで あそぼう!"}</small></span></button>
+        <div class="missions"><h2>きょうの ミッション <small>${S.mission.bonus?"ぜんぶ クリア!":"ぜんぶ できたら たからばこ"}</small></h2>
+          <ul>${ms.map(m=>`<li class="${m.done?"done":""}"><span class="chk">${m.done?"✓":""}</span>${m.d.t}<em>+5</em></li>`).join("")}</ul>
+          <div class="goal-line">きょうの もくひょう <span class="gd">${Array.from({length:goal},(_,i)=>`<i class="${i<done?"on":""}"></i>`).join("")}</span>
+            <span>${done>=goal?"たっせい!":`あと ${goal-done}かい`}</span></div></div>
         <div class="two">
-          <button class="tile" id="toZukan">${bookArt}<span>ずかん<small>なかま ${S.zukan.length}/8</small></span></button>
+          <button class="tile" id="toZukan">${bookArt}<span>ずかん<small>なかま ${S.zukan.length}/8 ・ かせき ${fossilTotal()}/32</small></span></button>
           <button class="tile" id="toReview" ${S.mistakes.length?"":"disabled"}>${retrySVG}<span>ふくしゅう<small>${S.mistakes.length?`${S.mistakes.length}もん`:"いまは ないよ"}</small></span></button>
         </div>
         <div class="stamp"><h2>スタンプカード <small>${S.days.includes(today())?"きょうの スタンプ ゲット!":"1かい あそぶと 1こ"}</small></h2>
@@ -235,7 +294,7 @@ function home(){
     </div></section>`;
   document.getElementById("toMap").onclick=()=>{sTap();map();};
   document.getElementById("toZukan").onclick=()=>{sTap();zukan();};
-  document.getElementById("toReview").onclick=()=>{sTap();start("review");};
+  document.getElementById("toReview").onclick=()=>{sTap();start("review","review");};
   document.getElementById("toTitle").onclick=title;
   const d=document.getElementById("dino"),b=document.getElementById("bub");
   d.onclick=()=>{hopEl(d);tone([[523,.1],[784,.15]]);sayBubble(b,pickOne(LINES));};
@@ -244,7 +303,8 @@ function home(){
 
 /* ================= ちず ================= */
 function map(){
-  const nextStage=STAGES.findIndex((s,i)=>unlocked(i)&&!(S.stars[s.id]>=1));
+  stopRun();R=null;
+  const nextStage=STAGES.findIndex((s,i)=>unlocked(i)&&!cleared(s.id));
   app.innerHTML=`<section class="screen">
     <div class="top"><h1 class="h-title">ぼうけんの ちず</h1><button class="quit" id="back">おうちへ</button></div>
     <div class="areas">${AREAS.map((a,ai)=>{
@@ -253,16 +313,61 @@ function map(){
       const got=sts.reduce((n,s)=>n+(S.stars[s.id]||0),0);
       return `<div class="area ${a.cls} ${open?"":"lock"}"><div class="scene">${sceneArt(a.cls)}</div>
         <h2>${a.name}<small>ほし ${got}/6</small></h2>
-        <div class="nodes">${sts.map(s=>{const ok=unlocked(s.i);return `
+        <div class="nodes">${sts.map(s=>{const ok=unlocked(s.i),md=medalOf(S.plays[s.id]||0);return `
           <button class="node ${s.i===nextStage?"next":""}" data-st="${s.id}" ${ok?"":"disabled"} aria-label="${s.name}">
-            <span class="c">${ok?s.i+1:lockSVG}</span><span class="nn">${s.name}</span>${starsRow(S.stars[s.id]||0)}</button>`;}).join("")}
+            <span class="c">${ok?s.i+1:lockSVG}${md>=0?`<span class="nmedal">${medalSVG(md,22)}</span>`:""}</span><span class="nn">${s.name}</span>${starsRow(S.stars[s.id]||0)}</button>`;}).join("")}
         </div></div>`;}).join("")}
     </div></section>`;
   document.getElementById("back").onclick=home;
-  app.querySelectorAll(".node[data-st]").forEach(b=>b.onclick=()=>{sTap();start(b.dataset.st);});
+  app.querySelectorAll(".node[data-st]").forEach(b=>b.onclick=()=>{sTap();stageMenu(b.dataset.st);});
 }
 
+/* ================= ステージの あそびかた ================= */
+function stageMenu(id){
+  stopRun();R=null;
+  const idx=STAGES.findIndex(s=>s.id===id),stg=STAGES[idx],area=AREAS[stg.area],b=stageBest(id);
+  const plays=S.plays[id]||0,md=medalOf(plays),nextM=MEDALS[md+1];
+  const open=cleared(id);
+  const lockNote=`<span class="mlock">ぼうけんを 1かい クリアすると あそべるよ</span>`;
+  app.innerHTML=`<section class="screen">
+    <div class="top"><button class="quit" id="back">ちずへ</button></div>
+    <div class="smenu ${area.cls}">
+      <div class="sm-head"><div class="sm-scene">${sceneArt(area.cls)}</div>
+        <div class="sm-title"><span class="sm-no">${idx+1}</span><div><small>${area.name}</small><h1>${stg.name}</h1></div></div></div>
+      <div class="modes">
+        <button class="mode adv" data-m="adv"><span class="mt">ぼうけん</span><span class="md">10もん とこう</span>
+          <span class="mr">${starsRow(S.stars[id]||0)}${b.time?`<span>じこベスト ${fmtTime(b.time)}</span>`:""}</span></button>
+        <button class="mode race" data-m="race" ${open?"":"disabled"}><span class="mt">きょうりゅう レース</span><span class="md">ライバルより さきに ゴール!</span>
+          <span class="mr">${open?`<span class="mart">${speciesArt(rivalOf(id))}</span><span>ライバル レベル ${b.race}</span>`:lockNote}</span></button>
+        <button class="mode speed" data-m="speed" ${open?"":"disabled"}><span class="mt">60びょう チャレンジ</span><span class="md">60びょうで なんもん とける?</span>
+          <span class="mr">${open?`<span>さいこう きろく ${b.speed}もん</span>`:lockNote}</span></button>
+      </div>
+      <div class="medal-row">${MEDALS.map((m,i)=>`<span class="mslot ${i<=md?"on":""}">${medalSVG(i,26)}<small>${m.n}かい</small></span>`).join("")}
+        <p>この ステージで あそんだ かいすう <b>${plays}</b>かい${nextM?` ・ つぎの ${nextM.name}くんしょうまで あと ${nextM.n-plays}かい`:" ・ きんくんしょう!"}</p></div>
+    </div></section>`;
+  document.getElementById("back").onclick=map;
+  app.querySelectorAll(".mode[data-m]").forEach(btn=>btn.onclick=()=>{sTap();start(id,btn.dataset.m);});
+}
+const rivalOf=id=>{const i=STAGES.findIndex(s=>s.id===id);return SPECIES[(i+3)%SPECIES.length].id;};
+
 /* ================= もんだい ================= */
+function withChoices(q){
+  const c=new Set([q.ans]),st=q.ans>=20?10:1;
+  for(const v of shuffle([q.ans+st,q.ans-st,q.ans+2*st,q.ans-2*st,q.ans+1,q.ans-1,q.ans+2])){if(c.size>=3)break;if(v>=0)c.add(v);}
+  return {...q,choices:shuffle([...c])};
+}
+function freshQ(){
+  const recent=new Set(R.qs.slice(-6).map(q=>q.key));
+  if(R.mode==="race"&&Math.random()<.15){const m=S.mistakes.find(m=>m.stage===R.id&&!recent.has(m.key));if(m)return {...m,review:true};}
+  let q;for(let g=0;g<50;g++){q=GEN[R.id]();if(!recent.has(q.key))break;}
+  return q;
+}
+function decorate(q,i){
+  if(R.mode!=="speed"&&Math.random()<.3)q=withChoices(q);else q={...q};delete q.gold;
+  if(R.mode==="adv"&&i===R.goldAt)q.gold=true;
+  if(R.mode==="speed")delete q.choices;
+  return q;
+}
 function makeSet(id){
   const qs=[],seen=new Set();
   const add=q=>{if(seen.has(q.key))return;seen.add(q.key);qs.push(q);};
@@ -271,45 +376,80 @@ function makeSet(id){
   let g=0;while(qs.length<10&&g++<1000)add(GEN[id]());
   return shuffle(qs);
 }
-function start(id){
-  R={id,qs:makeSet(id),i:0,input:"",tries:0,firstOk:0,food:0,lock:false,combo:0,maxCombo:0,hint:false};
-  if(!R.qs.length){home();return;}
+let RUN_SEQ=0;
+function start(id,mode){
+  stopRun();
+  R={id,mode,seq:++RUN_SEQ,qs:[],i:0,input:"",tries:0,firstOk:0,food:0,lock:false,combo:0,maxCombo:0,hint:false,
+     hintUsed:false,choiceOk:0,goldOk:false,correct:0,count:0,t0:performance.now(),over:false,goldAt:rnd(2,9),wrongPick:[]};
+  if(mode==="adv"||mode==="review"){R.qs=makeSet(id).map((q,i)=>decorate(q,i));if(!R.qs.length){home();return;}}
+  else{R.qs=[decorate(freshQ(),0)];}
+  if(mode==="race"){R.lv=stageBest(id).race;R.rival=rivalOf(id);R.rivalMs=rivalMs(id,R.lv);}
+  if(mode==="speed"){R.tEnd=R.t0+60000;}
   quiz();
+  if(mode==="race"||mode==="speed")tick();
 }
+function stopRun(){if(R){R.over=true;cancelAnimationFrame(R.raf);}}
+const later=(fn,ms)=>{const seq=R.seq;setTimeout(()=>{if(R&&R.seq===seq&&!R.over)fn();},ms);};
 const stageName=id=>id==="review"?"ふくしゅう":STAGES.find(s=>s.id===id).name;
+const MODE_NAME={adv:"",race:"レース",speed:"60びょう",review:""};
+
+function headerHTML(){
+  if(R.mode==="race"){const p=R.correct/10;
+    return `<div class="track"><div class="lane me"><span class="runner" id="rMe" style="left:calc((100% - 72px) * ${p})">${dinoArt(Math.max(2,stageOf(S.food)))}</span></div>
+      <div class="lane rv"><span class="runner" id="rRv" style="left:0">${speciesArt(R.rival)}</span></div><span class="flag" aria-hidden="true"></span>
+      <span class="left">ゴールまで あと <b>${10-R.correct}</b>もん</span></div>`;}
+  if(R.mode==="speed"){return `<div class="timer"><div class="tbar"><i id="tbar"></i></div><span class="tsec" id="tsec">60</span><span class="tcount">せいかい <b id="tcnt">${R.count}</b></span></div>`;}
+  return `<div class="steps">${R.qs.map((x,i)=>footSVG(i<R.i?"ok":i===R.i?"now":"")).join("")}</div>`;
+}
+function tick(){
+  if(!R||R.over)return;const now=performance.now();
+  if(R.mode==="race"){const p=Math.min(1,(now-R.t0)/R.rivalMs),el=document.getElementById("rRv");
+    if(el)el.style.left=`calc((100% - 72px) * ${p})`;
+    if(p>=1&&!R.goal){finishRun({won:false});return;}}
+  if(R.mode==="speed"){const left=Math.max(0,R.tEnd-now),b=document.getElementById("tbar"),s=document.getElementById("tsec");
+    if(b)b.style.width=(left/600)+"%";if(s)s.textContent=Math.ceil(left/1000);
+    if(s)s.classList.toggle("hurry",left<10000);
+    if(left<=0){finishRun({});return;}}
+  R.raf=requestAnimationFrame(tick);
+}
 
 function quiz(){
   const q=R.qs[R.i];
   const toks=q.disp.map(t=>t==="□"?`<span class="box" id="box">${R.input||"&nbsp;"}</span>`:
     t==="+"||t==="−"?`<span class="op">${t}</span>`:(t==="は"||t==="と")?`<span class="w">${t}</span>`:`<span>${t}</span>`).join("");
   const long=q.disp.length>5||q.disp.some(t=>typeof t==="number"&&t>=10);
+  const buddy=S.partner&&S.zukan.includes(S.partner)?speciesArt(S.partner):dinoArt(Math.max(2,stageOf(S.food)));
+  const pad=q.choices?`<div class="choices">${q.choices.map(v=>`<button class="egg-btn" data-c="${v}" ${R.wrongPick.includes(v)?"disabled":""}><span>${v}</span></button>`).join("")}</div>
+      <button class="key sm hintkey" data-n="hint">ヒント</button>`:
+    `${[7,8,9,4,5,6,1,2,3].map(n=>`<button class="key" data-n="${n}">${n}</button>`).join("")}
+      <button class="key sm" data-n="del">けす</button><button class="key" data-n="0">0</button>${R.mode==="speed"?`<button class="key sm" data-n="skip">とばす</button>`:`<button class="key sm" data-n="hint">ヒント</button>`}
+      <button class="key go" id="go">こたえる</button>`;
   app.innerHTML=`<section class="screen">
-    <div class="qtop"><button class="quit" id="quit">${R.id==="review"?"おうちへ":"ちずへ"}</button>
-      <span class="qname">${stageName(R.id)}</span>
-      <div class="steps">${R.qs.map((x,i)=>footSVG(i<R.i?"ok":i===R.i?"now":"")).join("")}</div>
+    <div class="qtop"><button class="quit" id="quit">${R.mode==="review"?"おうちへ":"やめる"}</button>
+      <span class="qname">${stageName(R.id)}${MODE_NAME[R.mode]?` ・ ${MODE_NAME[R.mode]}`:""}</span>
+      ${headerHTML()}
       <span class="combo ${R.combo>=3?"on":""}" id="combo">れんぞく ${R.combo}!</span></div>
     <div class="quiz">
-      <div class="board">
+      <div class="board ${q.gold?"gold":""}">
+        ${q.gold?`<span class="gold-tag">きんの たまご もんだい! いっかいで せいかいすると ごはん +3</span>`:""}
+        ${q.choices?`<span class="choice-tag">こたえを えらんでね</span>`:""}
         <div class="eq ${long?"long":""}">${toks}</div>
         <div class="hint" id="hint"></div>
         <p class="msg" id="msg">${q.review?"まえに まちがえた もんだいだよ":""}</p>
         <div class="mini-row">
-          <div class="mini" id="mini">${dinoArt(Math.max(2,stageOf(S.food)))}</div>
+          <div class="mini-wrap"><div class="mini" id="mini">${buddy}</div><div class="bubble sm" id="mbub"></div></div>
           <button class="say" id="say">${spk} よみあげ</button>
         </div>
       </div>
-      <div class="pad">
-        ${[7,8,9,4,5,6,1,2,3].map(n=>`<button class="key" data-n="${n}">${n}</button>`).join("")}
-        <button class="key sm" data-n="del">けす</button><button class="key" data-n="0">0</button><button class="key sm" data-n="hint">ヒント</button>
-        <button class="key go" id="go">こたえる</button>
-      </div>
+      <div class="pad ${q.choices?"pad-choice":""}">${pad}</div>
     </div></section>`;
-  document.getElementById("quit").onclick=()=>{R.id==="review"?home():map();};
+  document.getElementById("quit").onclick=()=>{const m=R.mode;stopRun();m==="review"?home():stageMenu(R.id);};
   document.getElementById("say").onclick=()=>speak(q.say);
   app.querySelectorAll(".key[data-n]").forEach(b=>b.onclick=()=>press(b.dataset.n));
-  document.getElementById("go").onclick=check;
+  app.querySelectorAll(".egg-btn").forEach(b=>b.onclick=()=>{if(R.lock)return;R.input=b.dataset.c;const box=document.getElementById("box");box.className="box";box.textContent=R.input;check(b);});
+  const go=document.getElementById("go");if(go)go.onclick=()=>check();
   if(R.hint)showHint(q);
-  if(S.set.autoRead&&!R.input)setTimeout(()=>speak(q.say),250);
+  if(S.set.autoRead&&!R.input&&R.mode!=="speed")setTimeout(()=>speak(q.say),250);
 }
 
 /* ---- ヒント ---- */
@@ -338,12 +478,15 @@ function hintParts(q){
 }
 function showHint(q){
   R.hint=true;const [vis,txt]=hintParts(q);
-  document.getElementById("hint").innerHTML=`<div class="hint-vis">${vis}</div><p class="htxt">${txt}</p>`;
+  const h=document.getElementById("hint");if(h)h.innerHTML=`<div class="hint-vis">${vis}</div><p class="htxt">${txt}</p>`;
 }
 
 function press(n){
-  if(R.lock)return;
-  if(n==="hint"){sTap();showHint(R.qs[R.i]);return;}
+  if(!R||R.lock||R.over)return;
+  const q=R.qs[R.i];
+  if(n==="hint"){sTap();R.hintUsed=true;showHint(q);return;}
+  if(n==="skip"){sTap();R.lock=true;R.combo=0;const msg=document.getElementById("msg");if(msg)msg.textContent=`こたえは ${q.ans} だったよ`;later(next,700);return;}
+  if(q.choices)return;
   if(n==="del")R.input=R.input.slice(0,-1);
   else if(R.input.length<3)R.input=(R.input==="0"?"":R.input)+n;
   sTap();
@@ -357,95 +500,159 @@ function record(q,firstTry){
 }
 function addMistake(q){
   if(S.mistakes.some(m=>m.key===q.key))return;
-  const {review,...clean}=q;S.mistakes.unshift(clean);S.mistakes=S.mistakes.slice(0,30);
+  const {review,choices,gold,...clean}=q;S.mistakes.unshift(clean);S.mistakes=S.mistakes.slice(0,30);
 }
 const PRAISE=["せいかい!","すごい!","やったね!","ばっちり!","てんさい!","かんぺき!"];
-function check(){
-  if(R.lock||R.input==="")return;
+const CHEER=["いいね!","その ちょうし!","はやい!","さすが!","かっこいい!"];
+function check(eggBtn){
+  if(!R||R.lock||R.over||R.input==="")return;
   const q=R.qs[R.i],box=document.getElementById("box"),msg=document.getElementById("msg"),mini=document.getElementById("mini");
+  const fast=R.mode==="speed";
   if(+R.input===q.ans){
-    R.lock=true;box.className="box ok";sOk();hopEl(mini);burst(box,R.tries?8:16);
+    R.lock=true;box.className="box ok";sOk();hopEl(mini);burst(eggBtn||box,R.tries?8:(q.gold?30:16));
     msg.textContent=pickOne(PRAISE);
-    R.food++;
+    if(Math.random()<.35)sayBubble(document.getElementById("mbub"),pickOne(CHEER));
+    R.food++;R.correct++;R.count++;
+    if(q.choices)R.choiceOk++;
     if(R.tries===0){R.firstOk++;R.combo++;R.maxCombo=Math.max(R.maxCombo,R.combo);
       if(q.review)S.mistakes=S.mistakes.filter(m=>m.key!==q.key);
+      if(q.gold){R.food+=3;R.goldOk=true;msg.textContent="きんの たまご ゲット! ごはん +3";sNew();}
       const c=document.getElementById("combo");if(R.combo>=3){c.textContent=`れんぞく ${R.combo}!`;c.className="combo";void c.offsetWidth;c.className="combo on";}
       if(R.combo===5||R.combo===10){R.food+=2;msg.textContent=`れんぞく ${R.combo}! ごはん +2`;}
     }
     record(q,R.tries===0);save();
-    setTimeout(next,1100);
+    if(R.mode==="race"){const me=document.getElementById("rMe");if(me)me.style.left=`calc((100% - 72px) * ${R.correct/10})`;
+      const l=app.querySelector(".track .left b");if(l)l.textContent=10-R.correct;
+      if(R.correct>=10){R.goal=true;later(()=>finishRun({won:true}),500);return;}}
+    if(fast){const t=document.getElementById("tcnt");if(t)t.textContent=R.count;}
+    later(next,fast?450:R.mode==="race"?700:1100);
   }else{
     R.tries++;R.combo=0;sNg();box.className="box ng";
     document.getElementById("combo").className="combo";
     addMistake(q);
-    if(R.tries===1){msg.textContent="おしい! ヒントを みて もういちど";showHint(q);R.input="";
-      setTimeout(()=>{if(!R.lock&&box.isConnected){box.className="box";box.innerHTML="&nbsp;";}},500);}
+    if(fast){R.lock=true;box.className="box ok";box.textContent=q.ans;msg.textContent=`こたえは ${q.ans}`;record(q,false);later(next,900);return;}
+    if(eggBtn){R.wrongPick.push(+R.input);eggBtn.disabled=true;}
+    if(R.tries===1){R.hintUsed=true;msg.textContent="おしい! ヒントを みて もういちど";showHint(q);R.input="";
+      setTimeout(()=>{if(R&&!R.lock&&box.isConnected){box.className="box";box.innerHTML="&nbsp;";}},500);}
     else{R.lock=true;showHint(q);box.className="box ok";box.textContent=q.ans;
-      msg.textContent=`こたえは ${q.ans} だよ。つぎは できるよ!`;R.food++;record(q,false);save();setTimeout(next,2600);}
+      msg.textContent=`こたえは ${q.ans} だよ。つぎは できるよ!`;R.food++;record(q,false);save();later(next,2400);}
   }
 }
 function next(){
-  R.i++;R.input="";R.tries=0;R.lock=false;R.hint=false;
-  if(R.i>=R.qs.length)result();else quiz();
+  R.i++;R.input="";R.tries=0;R.lock=false;R.hint=false;R.wrongPick=[];
+  if(R.mode==="adv"||R.mode==="review"){if(R.i>=R.qs.length){finishRun({});return;}}
+  else if(R.i>=R.qs.length)R.qs.push(decorate(freshQ(),R.i));
+  quiz();
 }
 
 /* ================= けっか ================= */
-function result(){
-  const before=stageOf(S.food),isReview=R.id==="review";
-  const stars=R.firstOk>=10?3:R.firstOk>=8?2:1;
-  let newSp=null,firstClear=false,improved=false;
-  if(!isReview){
-    const prev=S.stars[R.id]||0;firstClear=prev===0;improved=stars>prev;
-    S.stars[R.id]=Math.max(prev,stars);
-    const sp=SPECIES[STAGES.findIndex(s=>s.id===R.id)];
-    if(sp&&!S.zukan.includes(sp.id)){S.zukan.push(sp.id);newSp=sp;}
+function finishRun(extra){
+  if(!R||R.over)return;
+  R.over=true;cancelAnimationFrame(R.raf);
+  const run=Object.assign(R,extra,{finished:true});
+  const id=run.id,mode=run.mode,isReview=mode==="review";
+  const secs=(performance.now()-run.t0)/1000;
+  const before=stageOf(S.food);
+  const out={notes:[],stars:0,newSp:null,firstClear:false,improved:false,record:null};
+  if(mode==="adv"){
+    const stars=run.firstOk>=10?3:run.firstOk>=8?2:1;run.stars=stars;out.stars=stars;
+    const prev=S.stars[id]||0;out.firstClear=prev===0;out.improved=stars>prev;
+    S.stars[id]=Math.max(prev,stars);
+    const sp=SPECIES[STAGES.findIndex(s=>s.id===id)];
+    if(sp&&!S.zukan.includes(sp.id)){S.zukan.push(sp.id);out.newSp=sp;}
+    const b=stageBest(id);if(run.firstOk>=8&&(!b.time||secs<b.time)){out.record=b.time?`じこベスト こうしん! ${fmtTime(b.time)} → ${fmtTime(secs)}`:`じこベスト ${fmtTime(secs)}`;b.time=Math.round(secs);}
   }
-  S.food+=R.food;
+  if(mode==="race"){const b=stageBest(id);out.lvFrom=b.race;
+    if(run.won){b.race=Math.min(15,b.race+1);run.food+=3;}else b.race=Math.max(1,b.race-1);out.lvTo=b.race;}
+  if(mode==="speed"){const b=stageBest(id);out.prevBest=b.speed;if(run.count>b.speed){out.record=b.speed?`さいこう きろく こうしん! ${b.speed}もん → ${run.count}もん`:`はじめての きろく ${run.count}もん`;b.speed=run.count;}}
+  let medal=-1;
+  if(!isReview){const p0=S.plays[id]||0;S.plays[id]=p0+1;const m0=medalOf(p0),m1=medalOf(p0+1);if(m1>m0)medal=m1;}
+  S.food+=run.food;
   let bonus=false;
   if(!S.days.includes(today())){S.days.push(today());
     if(S.days.length-S.cardDone*10>=10){S.cardDone++;S.food+=10;bonus=true;}}
-  S.day.rounds++;save();
+  S.day.rounds++;
+  const mi=checkMissions(run);
+  const chests=[];const pref=(SPECIES[STAGES.findIndex(s=>s.id===id)]||SPECIES[0]).id;
+  chests.push(rollFossil(pref));if(mi.all)chests.push(rollFossil(pref));
+  save();
   const after=stageOf(S.food),grew=after>before;
-  const idx=STAGES.findIndex(s=>s.id===R.id);
-  const nextSt=!isReview&&idx<STAGES.length-1&&unlocked(idx+1)?STAGES[idx+1]:null;
+  const idx=STAGES.findIndex(s=>s.id===id);
+  const nextSt=mode==="adv"&&out.firstClear&&idx<STAGES.length-1&&unlocked(idx+1)?STAGES[idx+1]:null;
   const tired=S.set.max>0&&S.day.rounds>=S.set.max;
-  const goalHit=S.day.rounds===S.set.goal;
+  let head="",sub="";
+  if(mode==="adv")head=run.firstOk>=10?"パーフェクト!":"よく がんばったね!";
+  if(mode==="review")head="ふくしゅう おわり!",sub=`<p class="note">のこり ${S.mistakes.length}もん</p>`;
+  if(mode==="race")head=run.won?"レースに かった!":"おしい! もう すこし!",
+    sub=`<div class="race-res">${dinoArt(Math.max(2,after))}<span class="vs">${run.won?"かち":"まけ"}</span>${speciesArt(run.rival)}</div>
+      <p class="note">ライバル レベル ${out.lvFrom} → ${out.lvTo}${run.won?" ・ ごはん +3":" ・ つぎは かてるよ!"}</p>`;
+  if(mode==="speed")head=`${run.count}もん せいかい!`,sub=`<p class="note">60びょうで ${run.count}もん とけたよ</p>`;
   app.innerHTML=`<section class="screen"><div class="result">
-    <h2>${R.firstOk>=10?"パーフェクト!":"よく がんばったね!"}</h2>
-    ${isReview?`<p class="note">ふくしゅう おわり! のこり ${S.mistakes.length}もん</p>`:`<div class="big-stars">${[1,2,3].map(i=>starSVG(i<=stars)).join("")}</div>`}
-    <div class="food">${meat} ごはん +${R.food}${bonus?" ・ スタンプボーナス +10":""}${R.maxCombo>=3?` ・ さいこう れんぞく ${R.maxCombo}`:""}</div>
+    <h2>${head}</h2>
+    ${mode==="adv"?`<div class="big-stars">${[1,2,3].map(i=>starSVG(i<=out.stars)).join("")}</div>`:sub}
+    ${out.record?`<p class="record">${out.record}</p>`:""}
+    <div class="food">${meat} ごはん +${run.food}${bonus?" ・ スタンプボーナス +10":""}${run.maxCombo>=3?` ・ さいこう れんぞく ${run.maxCombo}`:""}</div>
     <div class="res-row">
-      <div class="res-dino" id="rd">${dinoArt(after)}</div>
-      ${newSp?`<div class="newfriend" id="nf">${speciesArt(newSp.id)}<div><b>あたらしい なかま!</b><span>${newSp.name}</span></div></div>`:""}
+      ${grew?`<div class="res-dino" id="rd">${dinoArt(after)}</div>`:""}
+      ${out.newSp?`<div class="newfriend" id="nf">${speciesArt(out.newSp.id)}<div><b>あたらしい なかま!</b><span>${out.newSp.name}</span></div></div>`:""}
+      <div class="chest-area" id="chestArea"></div>
     </div>
-    ${grew?`<p class="note" style="color:var(--lava)">${GROW[after].n}に せいちょうした!</p>`:""}
-    ${firstClear&&nextSt?`<p class="note">「${nextSt.name}」が あそべるように なったよ!</p>`:""}
-    ${goalHit?`<p class="note">きょうの もくひょう たっせい!</p>`:""}
-    ${tired?`<p class="note">きょうは たくさん がんばったね。また あした あそぼう!</p>`:""}
+    <div class="res-notes">
+      ${grew?`<p class="note hot">${GROW[after].n}に せいちょうした!</p>`:""}
+      ${medal>=0?`<p class="note medal-note">${medalSVG(medal,24)} ${MEDALS[medal].name}くんしょう ゲット! (${MEDALS[medal].n}かい あそんだ)</p>`:""}
+      ${nextSt?`<p class="note">「${nextSt.name}」が あそべるように なったよ! レースと 60びょうも あそべるよ</p>`:(mode==="adv"&&out.firstClear?`<p class="note">レースと 60びょう チャレンジが あそべるように なったよ!</p>`:"")}
+      ${mi.got.map(d=>`<p class="note mission-note">ミッション クリア! ${d.t} ・ ごはん +5</p>`).join("")}
+      ${mi.all?`<p class="note mission-note">きょうの ミッション ぜんぶ クリア! たからばこ もう1こ!</p>`:""}
+      ${tired?`<p class="note">きょうは たくさん がんばったね。また あした あそぼう!</p>`:""}
+    </div>
     <div class="btns"><button class="btn" id="home">おうちへ</button>
-      ${isReview?"":`<button class="btn" id="again">もういちど</button>`}
-      ${nextSt?`<button class="btn hot" id="nextSt">つぎの ステージ</button>`:isReview?"":`<button class="btn main" id="toMap">ちずへ</button>`}</div>
+      ${isReview?"":`<button class="btn" id="menu">あそびかたを えらぶ</button><button class="btn main" id="again">もういちど</button>`}
+      ${nextSt?`<button class="btn hot" id="nextSt">つぎの ステージ</button>`:""}</div>
   </div></section>`;
   sFan();
-  if(newSp)setTimeout(()=>{sNew();burst(document.getElementById("nf"),24);speak(`あたらしい なかま、${newSp.name}!`);},900);
-  if(grew)setTimeout(()=>{hopEl(document.getElementById("rd"));burst(document.getElementById("rd"),20);sFan();},newSp?2200:900);
-  else if(improved)setTimeout(()=>burst(app.querySelector(".big-stars"),18),700);
+  const showChest=()=>{
+    const area=document.getElementById("chestArea");if(!area)return;
+    if(!chests.length){area.innerHTML="";return;}
+    area.innerHTML=`<button class="chest" id="chest">${art("treasure","chest-art")}<span>たからばこを あける!${chests.length>1?` (${chests.length}こ)`:""}</span></button>`;
+    document.getElementById("chest").onclick=()=>{
+      const c=document.getElementById("chest");c.classList.add("opening");tone([[392,.08],[440,.08],[494,.08]]);
+      setTimeout(()=>{const f=chests.shift();sNew();
+        area.innerHTML=f?`<div class="reveal">${fossilBoard(f.id,"big")}<div><b>${f.complete?"かせき かんせい!":"かせきの かけらを みつけた!"}</b>
+          <span>${spName(f.id)}の かせき ${fossilCount(f.id)}/4</span></div></div>`:
+          `<div class="reveal"><div class="chest-mini">${art("treasure","chest-art")}</div><div><b>ごはんが はいってた!</b><span>${meat} ごはん +3</span></div></div>`;
+        burst(area,f&&f.complete?34:20);
+        if(f&&f.complete)speak(`${spName(f.id)}の かせき、かんせい!`);
+        if(chests.length)setTimeout(showChest,1800);
+      },650);};
+  };
+  setTimeout(showChest,out.newSp?1200:400);
+  if(out.newSp)setTimeout(()=>{sNew();burst(document.getElementById("nf"),24);speak(`あたらしい なかま、${out.newSp.name}!`);},900);
+  if(grew)setTimeout(()=>{hopEl(document.getElementById("rd"));burst(document.getElementById("rd"),20);},700);
+  else if(out.improved)setTimeout(()=>burst(app.querySelector(".big-stars"),18),700);
+  if(out.record)setTimeout(()=>burst(app.querySelector(".record"),22),500);
   document.getElementById("home").onclick=home;
-  const ag=document.getElementById("again");if(ag)ag.onclick=()=>start(R.id);
-  const ns=document.getElementById("nextSt");if(ns)ns.onclick=()=>start(nextSt.id);
-  const tm=document.getElementById("toMap");if(tm)tm.onclick=map;
+  const ag=document.getElementById("again");if(ag)ag.onclick=()=>start(id,mode);
+  const mn=document.getElementById("menu");if(mn)mn.onclick=()=>stageMenu(id);
+  const ns=document.getElementById("nextSt");if(ns)ns.onclick=()=>stageMenu(nextSt.id);
 }
 
 /* ================= ずかん ================= */
 function zukan(){
   app.innerHTML=`<section class="screen">
-    <div class="top"><h1 class="h-title">きょうりゅう ずかん <span style="font-size:.6em">${S.zukan.length}/8</span></h1><button class="quit" id="back">おうちへ</button></div>
-    <div class="zukan">${SPECIES.map((sp,i)=>{const got=S.zukan.includes(sp.id);return `
-      <button class="zc" data-z="${i}" ${got?"":"disabled"}>${speciesArt(sp.id,!got)}
-        <span class="zn">${got?sp.name:"???"}</span><span class="zf">${got?sp.fact:`「${STAGES[i].name}」を クリアすると なかまに なるよ`}</span></button>`;}).join("")}
+    <div class="top"><h1 class="h-title">きょうりゅう ずかん <span style="font-size:.6em">なかま ${S.zukan.length}/8 ・ かせき ${fossilTotal()}/32</span></h1><button class="quit" id="back">おうちへ</button></div>
+    <p class="zhelp">あそぶと たからばこから かせきの かけらが でるよ。4こ あつめると かせきが かんせい! なかまを「あいぼう」に すると、もんだいの とき いっしょに いてくれるよ。</p>
+    <div class="zukan">${SPECIES.map((sp,i)=>{const got=S.zukan.includes(sp.id),fc=fossilCount(sp.id),pal=S.partner===sp.id;return `
+      <div class="zc ${got?"":"off"} ${pal?"pal":""}">
+        <button class="zmain" data-z="${i}" ${got?"":"disabled"}>${speciesArt(sp.id,!got)}
+          <span class="zn">${got?sp.name:"???"}</span><span class="zf">${got?sp.fact:`「${STAGES[i].name}」を クリアすると なかまに なるよ`}</span></button>
+        <div class="zfoot">${fossilBoard(sp.id,"sm")}<span class="zfc">かせき ${fc}/4</span>
+          ${got?`<button class="pal-btn" data-p="${sp.id}">${pal?"あいぼう!":"あいぼうに する"}</button>`:""}</div>
+      </div>`;}).join("")}
     </div></section>`;
   document.getElementById("back").onclick=home;
-  app.querySelectorAll(".zc[data-z]").forEach(b=>b.onclick=()=>{const sp=SPECIES[+b.dataset.z];hopEl(b.querySelector(".game-art"));tone([[523,.1],[659,.1],[784,.15]]);speak(`${sp.name}。${sp.fact}`);});
+  app.querySelectorAll(".zmain[data-z]").forEach(b=>b.onclick=()=>{const sp=SPECIES[+b.dataset.z];hopEl(b.querySelector(".game-art"));tone([[523,.1],[659,.1],[784,.15]]);speak(`${sp.name}。${sp.fact}`);});
+  app.querySelectorAll(".pal-btn").forEach(b=>b.onclick=()=>{const id=b.dataset.p;S.partner=S.partner===id?null:id;save();sTap();
+    if(S.partner)speak(`${SPECIES.find(s=>s.id===id).name}が あいぼうに なったよ`);zukan();});
 }
 
 /* ================= おうちのかたへ ================= */
@@ -478,9 +685,10 @@ function parent(){
       <p class="cal-legend">色が濃いほど多く解いた日です(薄:1〜9問/中:10〜24問/濃:25問以上)。</p></div>
     <div class="p-cols">
       <div class="p-card"><h2>ステージ別の結果</h2><div class="tbl-wrap"><table>
-        <thead><tr><th>ステージ</th><th class="r">解いた数</th><th>1回目正解率</th><th class="r">星</th></tr></thead>
-        <tbody>${STAGES.map((s,i)=>{const st=S.stats[s.id]||{n:0,first:0},r=rate(st);return `<tr><td>${i+1}. ${s.name}</td><td class="r">${st.n}</td>
-          <td>${r===null?"—":`<span class="rate" style="width:${Math.max(4,r*.6)}px"></span>${r}%`}</td><td class="r">${"★".repeat(S.stars[s.id]||0)||"—"}</td></tr>`;}).join("")}</tbody>
+        <thead><tr><th>ステージ</th><th class="r">遊んだ回数</th><th class="r">解いた数</th><th>1回目正解率</th><th class="r">星</th><th class="r">60秒最高</th><th class="r">レースLv</th></tr></thead>
+        <tbody>${STAGES.map((s,i)=>{const st=S.stats[s.id]||{n:0,first:0},r=rate(st);const bb=S.best[s.id]||{};return `<tr><td>${i+1}. ${s.name}</td><td class="r">${S.plays[s.id]||0}</td><td class="r">${st.n}</td>
+          <td>${r===null?"—":`<span class="rate" style="width:${Math.max(4,r*.6)}px"></span>${r}%`}</td><td class="r">${"★".repeat(S.stars[s.id]||0)||"—"}</td>
+          <td class="r">${bb.speed?bb.speed+"問":"—"}</td><td class="r">${bb.race||"—"}</td></tr>`;}).join("")}</tbody>
       </table></div>
         <h2 style="margin-top:14px">まちがえた問題(新しい順)</h2>
         ${S.mistakes.length?`<div class="chips">${S.mistakes.slice(0,20).map(m=>`<span>${m.disp.join(" ").replace("□",m.ans)}</span>`).join("")}</div>
@@ -511,7 +719,7 @@ document.addEventListener("keydown",e=>{
 });
 
 /* テスト用 */
-window.__kk={GEN,STAGES,hintParts};
+window.__kk={GEN,STAGES,hintParts,withChoices,MISSIONS,get S(){return S;},get R(){return R;}};
 
 title();
 })();
