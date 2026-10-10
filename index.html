@@ -132,7 +132,43 @@ button:focus-visible{outline:4px solid var(--lava);outline-offset:3px}
 .btn.main{background:var(--leaf);color:#fff;box-shadow:0 6px 0 var(--leaf-deep)}
 .btn:active{transform:translateY(4px)}
 
+/* ---------- title ---------- */
+.top-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.title{align-items:center;justify-content:center;text-align:center}
+.title-hero{display:flex;align-items:center;justify-content:center;gap:clamp(8px,2vw,24px);flex-wrap:wrap}
+.title-dino{width:clamp(120px,18vw,210px);aspect-ratio:1;cursor:pointer}
+.title-dino svg,.egg-new svg{width:100%;height:100%;display:block}
+.title-logo{margin:0;font-family:var(--display);font-weight:400;line-height:1.05;text-align:left;
+  font-size:clamp(40px,7vw,84px);letter-spacing:.03em;text-shadow:0 5px 0 #1f4a3322}
+.title-logo span{display:block;color:var(--lava)}
+.title-sub{font-size:clamp(20px,2.4vw,26px);margin:0}
+.slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;width:100%;max-width:960px}
+.slot{position:relative;background:var(--card);border-radius:24px;box-shadow:0 6px 0 var(--leaf);display:flex;flex-direction:column;min-height:210px}
+.slot .open{flex:1;border:0;background:none;border-radius:24px;padding:16px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.slot .open svg{width:110px;height:110px}
+.slot .open:active{transform:translateY(3px)}
+.slot .nm{font-size:24px;line-height:1.2;word-break:break-all}
+.slot .meta{font-size:15px;font-weight:500;opacity:.75;display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center}
+.slot .meta svg{width:20px;height:20px}
+.slot .del{position:absolute;top:10px;right:10px;border:0;background:#efe8d6;border-radius:10px;padding:6px 10px;font-size:14px}
+.slot.empty{background:transparent;box-shadow:none;border:4px dashed #b9cdbf}
+.slot.empty .plus{font-family:var(--display);font-size:60px;line-height:1;color:var(--leaf)}
+.slot.asking{justify-content:center;gap:12px;padding:16px;box-shadow:0 6px 0 var(--lava)}
+.ask{margin:0;font-size:18px;line-height:1.5}
+.ask-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.ask-btns .btn{padding:12px 18px;font-size:18px}
+.btn.danger{background:var(--lava);color:#fff;box-shadow:0 6px 0 #b9461a}
+.egg-new{width:clamp(110px,16vw,170px);aspect-ratio:1;animation:wobble 2.4s infinite}
+@keyframes wobble{0%,70%,100%{transform:rotate(0)}76%{transform:rotate(-6deg)}84%{transform:rotate(6deg)}92%{transform:rotate(-3deg)}}
+.name-form{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:440px}
+#nameIn{width:100%;box-sizing:border-box;font-family:var(--body);font-weight:700;font-size:32px;text-align:center;
+  padding:14px 16px;border-radius:18px;border:4px solid var(--leaf);background:#fff;color:var(--leaf-deep);-webkit-user-select:text;user-select:text}
+#nameIn:focus{outline:none;border-color:var(--lava)}
 @media (max-width:760px){
+  .slots{grid-template-columns:1fr}
+  .slot{min-height:0}
+  .slot .open{flex-direction:row;justify-content:flex-start;text-align:left;flex-wrap:wrap}
+  .slot .open svg{width:72px;height:72px}
   body{overflow:auto}
   .home,.quiz{grid-template-columns:1fr}
   .dino-box{width:min(100%,220px)}
@@ -147,12 +183,27 @@ button:focus-visible{outline:4px solid var(--lava);outline-offset:3px}
 <script>
 (()=>{
 /* ================= 保存 ================= */
-const KEY="kyoryu-sansu-v1";
+const KEY="kyoryu-sansu-slots", OLD_KEY="kyoryu-sansu-v1", SLOTS=3;
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();};
-let S={food:0,stars:{add:0,sub:0,mix:0},days:[],mistakes:[],cardDone:0,day:{date:"",rounds:0}};
-try{const raw=localStorage.getItem(KEY);if(raw)S=Object.assign(S,JSON.parse(raw));}catch(e){}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
-if(S.day.date!==today())S.day={date:today(),rounds:0};
+const blank=name=>({name,food:0,stars:{add:0,sub:0,mix:0},days:[],mistakes:[],cardDone:0,day:{date:"",rounds:0}});
+let DB={slots:Array(SLOTS).fill(null),last:0};
+let migrated=false;
+try{
+  const raw=localStorage.getItem(KEY);
+  if(raw){DB=Object.assign(DB,JSON.parse(raw));}
+  else{const old=localStorage.getItem(OLD_KEY);if(old){DB.slots[0]=Object.assign(blank("ぼうけんしゃ1"),JSON.parse(old));migrated=true;}}
+}catch(e){}
+while(DB.slots.length<SLOTS)DB.slots.push(null);
+let S=null,cur=-1;
+const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){}};
+const save=()=>{if(cur>=0)DB.slots[cur]=S;persist();};
+if(migrated)persist();
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function pick(i){
+  cur=i;DB.last=i;S=Object.assign(blank("ぼうけんしゃ"+(i+1)),DB.slots[i]);
+  if(S.day.date!==today())S.day={date:today(),rounds:0};
+  save();home();
+}
 
 /* ================= 恐竜 ================= */
 const GROW=[{n:"たまご",at:0},{n:"ひびの はいった たまご",at:10},{n:"あかちゃん きょうりゅう",at:30},{n:"こども きょうりゅう",at:60},{n:"おとな きょうりゅう",at:100}];
@@ -245,10 +296,11 @@ function home(){
   const goalDone=S.day.rounds>0;
   app.innerHTML=`<section class="screen">
     <div class="top"><h1 class="logo">きょうりゅう <span>けいさん</span></h1>
-      <div class="pill">${meat} ごはん <b>${S.food}</b></div></div>
+      <div class="top-r"><div class="pill">${meat} ごはん <b>${S.food}</b></div>
+        <button class="quit" id="toTitle">ノートを かえる</button></div></div>
     <div class="home">
       <div class="nest">
-        <p class="dino-name">${GROW[st].n}</p>
+        <p class="dino-name">${esc(S.name)}の ${GROW[st].n}</p>
         <div class="dino-box" id="dino">${dinoSVG(st)}</div>
         <div class="grow"><div class="grow-label"><span>せいちょう</span><span>${next?`つぎまで あと ${next.at-S.food}`:"いちばん おおきく なったよ!"}</span></div>
           <div class="bar"><i style="width:${pct}%"></i></div></div>
@@ -266,6 +318,53 @@ function home(){
     </div></section>`;
   app.querySelectorAll(".stage").forEach(b=>b.onclick=()=>start(b.dataset.mode));
   const d=document.getElementById("dino");d.onclick=()=>{d.classList.remove("hop");void d.offsetWidth;d.classList.add("hop");tone([[523,.1],[784,.15]]);};
+  document.getElementById("toTitle").onclick=title;
+}
+
+/* ---------- タイトル / セーブデータ ---------- */
+function slotCard(s,i){
+  if(!s)return `<div class="slot empty"><button class="open" data-new="${i}">
+      <span class="plus">+</span><span class="nm">あたらしく はじめる</span><span class="meta">ノート ${i+1}</span></button></div>`;
+  const st=stageOf(s.food||0),stars=Object.values(s.stars||{}).reduce((a,b)=>a+b,0);
+  return `<div class="slot" data-slot="${i}"><button class="open" data-pick="${i}">
+      ${dinoSVG(st)}<span class="nm">${esc(s.name)}</span>
+      <span class="meta">${meat} ${s.food||0} ・ ほし ${stars}/9 ・ ${(s.days||[]).length}にち</span></button>
+      <button class="del" data-del="${i}">けす</button></div>`;
+}
+function title(){
+  R=null;S=null;cur=-1;
+  app.innerHTML=`<section class="screen title">
+    <div class="title-hero"><div class="title-dino" id="tdino">${dinoSVG(4)}</div>
+      <h1 class="title-logo">きょうりゅう<span>けいさん</span></h1></div>
+    <p class="title-sub">ぼうけんノートを えらんでね</p>
+    <div class="slots">${DB.slots.map(slotCard).join("")}</div></section>`;
+  app.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{tone([[523,.1],[784,.15]]);pick(+b.dataset.pick);});
+  app.querySelectorAll("[data-new]").forEach(b=>b.onclick=()=>newSlot(+b.dataset.new));
+  app.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>askDelete(+b.dataset.del));
+  const t=document.getElementById("tdino");t.onclick=()=>{t.classList.remove("hop");void t.offsetWidth;t.classList.add("hop");tone([[392,.1],[523,.1],[784,.2]]);};
+}
+function askDelete(i){
+  const card=app.querySelector(`[data-slot="${i}"]`);if(!card)return;
+  card.classList.add("asking");
+  card.innerHTML=`<p class="ask">「${esc(DB.slots[i].name)}」の ノートを けすと、きょうりゅうも きろくも なくなります。</p>
+    <div class="ask-btns"><button class="btn" id="noDel">けさない</button><button class="btn danger" id="yesDel">けす</button></div>`;
+  document.getElementById("noDel").onclick=title;
+  document.getElementById("yesDel").onclick=()=>{DB.slots[i]=null;persist();title();};
+}
+function newSlot(i){
+  app.innerHTML=`<section class="screen title">
+    <div class="egg-new">${dinoSVG(0)}</div>
+    <form class="name-form" id="nf">
+      <label for="nameIn" class="title-sub">なまえを いれてね</label>
+      <input id="nameIn" maxlength="8" autocomplete="off" placeholder="ぼうけんしゃ${i+1}">
+      <div class="btns"><button type="button" class="btn" id="back">もどる</button><button type="submit" class="btn main">はじめる</button></div>
+    </form></section>`;
+  const inp=document.getElementById("nameIn");
+  setTimeout(()=>{try{inp.focus();}catch(e){}},50);
+  document.getElementById("back").onclick=title;
+  document.getElementById("nf").onsubmit=e=>{e.preventDefault();
+    const name=inp.value.trim().slice(0,8)||("ぼうけんしゃ"+(i+1));
+    DB.slots[i]=blank(name);persist();sFan();pick(i);};
 }
 
 function start(mode){
@@ -370,7 +469,7 @@ document.addEventListener("keydown",e=>{
   else if(e.key==="Enter"){e.preventDefault();check();}
 });
 
-home();
+title();
 })();
 </script>
 <script>
