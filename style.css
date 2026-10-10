@@ -526,3 +526,36 @@ td.r,th.r{text-align:right}
 .dino-wrap.sleep .zzz{display:block}
 .dino-wrap.sleep .dino-box .idle{animation:breathe 5s ease-in-out infinite}
 .dino-wrap.sleep .dino-box .game-art{filter:brightness(.93) saturate(.9)}
+
+/* ================= ホームの恐竜:あるく・たべる・ほる・おいかける ================= */
+.dino-wrap{--dw:260px;width:100%;height:var(--dw);max-width:none}
+.dino-wrap::before{width:calc(var(--dw) * .82);height:calc(var(--dw) * .82);left:calc(50% - var(--dw) * .41);bottom:-8%}
+.walker{position:absolute;bottom:0;left:calc(50% - var(--dw) / 2);width:var(--dw);height:var(--dw);z-index:1}
+.walker .dino-box{width:100%;height:100%}
+.face{width:100%;height:100%;transition:transform .25s}
+.floor{position:absolute;inset:0;pointer-events:none;z-index:2;overflow:visible}
+.prop{position:absolute;bottom:1%;width:calc(var(--dw) * .24);transform:translateX(-50%);transition:transform .3s,opacity .5s;transform-origin:50% 100%}
+.prop svg,.prop img{width:100%;height:auto;display:block}
+.prop.drop{animation:propdrop .5s ease-out}
+.prop.grow-in{animation:propgrow .4s ease-out}
+.prop.fade{opacity:0}
+@keyframes propdrop{from{transform:translate(-50%,-90px);opacity:0}70%{transform:translate(-50%,6px);opacity:1}to{transform:translate(-50%,0)}}
+@keyframes propgrow{from{transform:translateX(-50%) scale(0)}to{transform:translateX(-50%) scale(1)}}
+.flyer{position:absolute;width:56px;animation:flyacross 4.6s ease-in-out forwards}
+.flyer svg,.flyer img{width:100%;height:auto;display:block;animation:flutter .12s linear infinite alternate}
+@keyframes flyacross{0%{left:calc(50% + var(--from) * 52%);top:14%}25%{top:2%}50%{left:calc(50% + var(--from) * 5%);top:20%}75%{top:4%}100%{left:calc(50% - var(--from) * 70%);top:-6%}}
+@keyframes flutter{from{transform:scaleY(1)}to{transform:scaleY(.82)}}
+.dino-box .idle.walking{animation:gait .42s ease-in-out infinite}
+@keyframes gait{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-6px) rotate(-2deg)}50%{transform:translateY(0)}75%{transform:translateY(-6px) rotate(2deg)}}
+.act.a-eat{animation:eatbob .7s ease-in-out}
+.act.a-happy{animation:stomp .9s ease-out}
+.act.a-dig{animation:dig .3s ease-in-out 4}
+.act.a-jump{animation:jumpup .7s ease-out}
+.act.a-roar{animation:roar 1.2s ease-in-out}
+@keyframes eatbob{0%,100%{transform:rotate(0)}45%,60%{transform:rotate(11deg) translateY(8px)}}
+@keyframes dig{0%,100%{transform:rotate(6deg) translateX(0)}50%{transform:rotate(9deg) translateX(-5px)}}
+@keyframes jumpup{0%,100%{transform:translateY(0)}45%{transform:translateY(-38px) rotate(-8deg)}}
+@keyframes roar{0%,100%{transform:rotate(0) scale(1)}20%{transform:rotate(-7deg) scale(1.06)}30%,50%,70%{transform:rotate(-7deg) scale(1.06) translateX(2px)}40%,60%{transform:rotate(-7deg) scale(1.06) translateX(-2px)}}
+.feed-btn{border:0;background:var(--card);border-radius:999px;padding:8px 18px;font-size:17px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 0 #bfb59d;border:1px solid #e2d9c6;position:relative;z-index:3}
+.feed-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #bfb59d}
+@media (max-width:760px){.dino-wrap{--dw:200px}}

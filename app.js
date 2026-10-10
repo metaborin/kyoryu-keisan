@@ -271,7 +271,10 @@ function home(){
     <div class="home">
       <div class="nest">
         <p class="dino-name">${esc(S.name)}の ${GROW[st].n}</p>
-        <div class="dino-wrap ${st<=1?"is-egg":""}" id="dwrap"><div class="dino-box" id="dino"><div class="idle"><div class="act" id="act">${dinoArt(st)}</div></div></div><div class="zzz" aria-hidden="true"><i>z</i><i>z</i><i>Z</i></div><div class="bubble" id="bub"></div></div>
+        <div class="dino-wrap ${st<=1?"is-egg":""}" id="dwrap"><div class="floor" id="floor"></div>
+          <div class="walker" id="walker"><div class="face" id="face"><div class="dino-box" id="dino"><div class="idle" id="idle"><div class="act" id="act">${dinoArt(st)}</div></div></div></div>
+            <div class="zzz" aria-hidden="true"><i>z</i><i>z</i><i>Z</i></div><div class="bubble" id="bub"></div></div></div>
+        ${st>=2?`<button class="feed-btn" id="feed">${meat} ごはんを あげる</button>`:""}
         <div class="grow"><div class="grow-label"><span>せいちょう</span><span>${next?`つぎまで ごはん あと ${next.at-S.food}`:"いちばん おおきく なったよ!"}</span></div>
           <div class="bar"><i style="width:${pct}%"></i></div></div>
       </div>
@@ -297,34 +300,148 @@ function home(){
   document.getElementById("toReview").onclick=()=>{sTap();start("review","review");};
   document.getElementById("toTitle").onclick=title;
   const d=document.getElementById("dino"),b=document.getElementById("bub");
-  d.onclick=()=>{const w=document.getElementById("dwrap");if(w&&w.classList.contains("sleep")){w.classList.remove("sleep");idleKick();sayBubble(b,"あっ、おはよう!");hopEl(d);tone([[659,.1],[880,.15]]);return;}
+  d.onclick=()=>{const w=document.getElementById("dwrap");if(w&&w.classList.contains("sleep")){w.classList.remove("sleep");setPose(null);idleKick();sayBubble(b,"あっ、おはよう!");hopEl(d);tone([[659,.1],[880,.15]]);return;}
     idleKick();hopEl(d);tone([[523,.1],[784,.15]]);sayBubble(b,pickOne(LINES));};
+  const fb=document.getElementById("feed");if(fb)fb.onclick=feed;
   startIdle(st);
   bindHold(document.getElementById("toParent"),1500,parent);
 }
 
 
 /* ---- ホームの恐竜の ひとりあそび ---- */
-const IDLE_LINES=["おなか すいたなあ","けいさん しようよ!","ふわぁ…","なにして あそぶ?","きょうも ぼうけんだ!","たまご ころころ…","ガオー!","いい てんきだね"];
-let idleT=0,idleLast=0;
-function idleKick(){idleLast=performance.now();}
-function startIdle(st){
-  clearTimeout(idleT);idleLast=performance.now();if(REDUCE)return;
-  const egg=st<=1;
-  const acts=egg?["wobble","wobble","rock","peek"]:["look","sway","stretch","stomp","tail","look","sway"];
-  const loop=()=>{
-    const w=document.getElementById("dwrap"),a=document.getElementById("act");
-    if(!w||!a)return;
-    const idleFor=performance.now()-idleLast;
-    if(idleFor>30000&&!w.classList.contains("sleep")){w.classList.add("sleep");a.className="act";}
-    if(!w.classList.contains("sleep")){
-      const act=pickOne(acts);a.className="act";void a.offsetWidth;a.classList.add("a-"+act);
-      if(act==="stomp")setTimeout(()=>tone([[110,.08],[98,.1]]),350);
-      if(Math.random()<.3)sayBubble(document.getElementById("bub"),egg?pickOne(["コトコト…","もうすぐ うまれるかな?","ころん"]):pickOne(IDLE_LINES));
+/* ポーズ画像(あとから追加できる)
+   assets/art/pose/<baby|child|adult>-<pose>.webp を置き、ここに名前を書くと自動で使われます。
+   pose: walk-a, walk-b, eat-a, eat-b, sleep, roar, dig, look
+   小物 assets/art/<name>.webp: meat, fern, dragonfly, dirt */
+const POSES={baby:[],child:[],adult:[]};
+const PROPS=[];
+const IDLE_LINES=["おなか すいたなあ","けいさん しようよ!","ふわぁ…","なにして あそぶ?","きょうも ぼうけんだ!","ガオー!","いい てんきだね","あるくの たのしい!"];
+const EGG_LINES=["コトコト…","もうすぐ うまれるかな?","ころん"];
+const PROP_SVG={
+  meat:`<svg viewBox="0 0 64 48"><path d="M10 38 L4 44" stroke="#f3ead6" stroke-width="7" stroke-linecap="round"/><circle cx="4" cy="44" r="4" fill="#f3ead6"/><ellipse cx="34" cy="24" rx="24" ry="17" fill="#b9472f" transform="rotate(-18 34 24)"/><ellipse cx="38" cy="18" rx="11" ry="5" fill="#e98a6c" transform="rotate(-18 38 18)"/></svg>`,
+  fern:`<svg viewBox="0 0 64 48"><g stroke="#3d6444" stroke-width="3" fill="none" stroke-linecap="round"><path d="M32 46 Q30 26 18 8"/><path d="M32 46 Q36 24 50 10"/><path d="M32 46 Q32 22 34 4"/></g><g fill="#5f9a54"><ellipse cx="22" cy="18" rx="7" ry="3" transform="rotate(-50 22 18)"/><ellipse cx="26" cy="28" rx="7" ry="3" transform="rotate(-40 26 28)"/><ellipse cx="44" cy="18" rx="7" ry="3" transform="rotate(45 44 18)"/><ellipse cx="40" cy="28" rx="7" ry="3" transform="rotate(35 40 28)"/><ellipse cx="33" cy="14" rx="3" ry="7"/></g></svg>`,
+  dragonfly:`<svg viewBox="0 0 64 40"><g fill="#bfe3f0" stroke="#7fb4c9" stroke-width="1"><ellipse cx="22" cy="12" rx="16" ry="5" transform="rotate(-12 22 12)"/><ellipse cx="42" cy="12" rx="16" ry="5" transform="rotate(12 42 12)"/><ellipse cx="22" cy="22" rx="13" ry="4" transform="rotate(10 22 22)"/><ellipse cx="42" cy="22" rx="13" ry="4" transform="rotate(-10 42 22)"/></g><rect x="30" y="8" width="4" height="30" rx="2" fill="#3a7bb8"/><circle cx="32" cy="7" r="4" fill="#2f6698"/></svg>`,
+  dirt:`<svg viewBox="0 0 64 32"><ellipse cx="32" cy="24" rx="28" ry="9" fill="#9c7448"/><ellipse cx="26" cy="20" rx="14" ry="7" fill="#b88b58"/><circle cx="44" cy="18" r="4" fill="#8a6440"/></svg>`
+};
+const propHTML=n=>PROPS.includes(n)?`<img src="${ART_ROOT}${n}.webp" alt="" draggable="false">`:PROP_SVG[n];
+const stageKey=st=>["","","baby","child","adult"][st]||"";
+
+const P={st:0,busy:false,x:0,face:1,timer:0,last:0,frame:0};
+function idleKick(){P.last=performance.now();}
+const $id=id=>document.getElementById(id);
+const petAlive=()=>!!$id("walker");
+function petImg(){return document.querySelector("#act img");}
+function setPose(pose){
+  const img=petImg();if(!img)return;
+  const k=stageKey(P.st);
+  img.src=pose&&k&&POSES[k]&&POSES[k].includes(pose)?`${ART_ROOT}pose/${k}-${pose}.webp`:`${ART_ROOT}${GROW_ART[P.st]}.webp`;
+}
+const hasPose=p=>{const k=stageKey(P.st);return !!(k&&POSES[k]&&POSES[k].includes(p));};
+function setAct(name){const a=$id("act");if(!a)return;a.className="act";void a.offsetWidth;if(name)a.classList.add("a-"+name);}
+function faceTo(dir){P.face=dir;const f=$id("face");if(f)f.style.transform=`scaleX(${dir})`;}
+function range(){const w=$id("dwrap"),k=$id("walker");if(!w||!k)return 0;return Math.max(0,(w.clientWidth-k.clientWidth)/2-6);}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+
+async function walkTo(x){
+  const k=$id("walker"),idle=$id("idle");if(!k)return;
+  const r=range();x=Math.max(-r,Math.min(r,x));
+  const dist=Math.abs(x-P.x);if(dist<8)return;
+  faceTo(x>P.x?1:-1);
+  const ms=Math.max(700,dist*14);
+  idle&&idle.classList.add("walking");
+  let flip=null;
+  if(hasPose("walk-a")&&hasPose("walk-b")){let f=0;setPose("walk-a");flip=setInterval(()=>{f^=1;setPose(f?"walk-b":"walk-a");},180);}
+  k.style.transition=`transform ${ms}ms linear`;k.style.transform=`translateX(${x}px)`;
+  const steps=Math.floor(ms/420);for(let i=0;i<steps;i++)setTimeout(()=>petAlive()&&!P.quiet&&tone([[90+Math.random()*20,.05]]),i*420+200);
+  await wait(ms);
+  clearInterval(flip);setPose(null);
+  idle&&idle.classList.remove("walking");
+  P.x=x;
+}
+function placeProp(name,x,cls=""){
+  const fl=$id("floor");if(!fl)return null;
+  const el=document.createElement("span");el.className=`prop prop-${name} ${cls}`;el.innerHTML=propHTML(name);
+  el.style.left=`calc(50% + ${x}px)`;fl.appendChild(el);return el;
+}
+function crumbs(el,color,n=8){
+  if(!el||REDUCE)return;const r=el.getBoundingClientRect();
+  const L=document.createElement("div");L.className="fx";document.body.appendChild(L);
+  for(let i=0;i<n;i++){const s=document.createElement("i");s.style.left=(r.left+r.width/2)+"px";s.style.top=(r.top+r.height/2)+"px";
+    s.style.setProperty("--dx",(Math.random()*60-30)+"px");s.style.setProperty("--dy",(-20-Math.random()*30)+"px");s.style.background=color;s.style.width=s.style.height="7px";L.appendChild(s);}
+  setTimeout(()=>L.remove(),1000);
+}
+
+/* ---- うごき ---- */
+const ACTS={
+  async walk(){const r=range();await walkTo((Math.random()*2-1)*r);if(Math.random()<.35)say(pickOne(["てくてく","おさんぽ たのしい!","あっちに いこう"]));},
+  async eat(food){
+    food=food||"fern";const r=range(),k=$id("walker");if(!k)return;
+    const fx=(Math.random()*2-1)*r*.9;const el=placeProp(food,fx,"drop");
+    await wait(500);
+    const off=k.clientWidth*.32;const target=fx+(fx>=P.x?-off:off);
+    await walkTo(target);faceTo(fx>=P.x?1:-1);
+    for(let i=0;i<3;i++){
+      setAct("eat");if(hasPose("eat-a"))setPose(i%2?"eat-b":"eat-a");
+      tone([[300+Math.random()*80,.05],[240,.05]]);
+      await wait(380);if(el){el.style.transform=`translateX(-50%) scale(${1-.3*(i+1)})`;crumbs(el,food==="meat"?"#b9472f":"#5f9a54",6);}
+      await wait(320);
     }
-    idleT=setTimeout(loop,3500+Math.random()*3500);
+    setPose(null);el&&el.remove();setAct("happy");say(pickOne(["おいしい!","もぐもぐ… おいしかった!","おなか いっぱい!"]));
+    tone([[523,.08],[659,.08],[784,.14]]);await wait(900);
+  },
+  async dig(){
+    const fl=$id("walker");setAct("dig");if(hasPose("dig"))setPose("dig");
+    const k=$id("walker");const x=P.x+(P.face*(k?k.clientWidth*.22:40));const el=placeProp("dirt",x,"grow-in");
+    for(let i=0;i<4;i++){tone([[140+Math.random()*40,.04]]);crumbs(el,"#9c7448",5);await wait(300);}
+    setPose(null);setAct("");
+    say(pickOne(["かせき あるかな?","なにも なかった…","ほりほり","この したに たからが…?"]));
+    await wait(1400);el&&el.classList.add("fade");await wait(600);el&&el.remove();
+  },
+  async chase(){
+    const fl=$id("floor");if(!fl)return;
+    const fly=document.createElement("span");fly.className="flyer";fly.innerHTML=propHTML("dragonfly");fl.appendChild(fly);
+    const from=Math.random()<.5?-1:1;fly.style.setProperty("--from",from);
+    say("あっ、トンボだ!");setAct("look");if(hasPose("look"))setPose("look");faceTo(-from);
+    await wait(1200);setPose(null);
+    await walkTo(-from*range()*.6);setAct("jump");tone([[392,.08],[523,.1]]);await wait(700);
+    say(pickOne(["にげられた〜","まてまて〜!","はやいなあ"]));
+    await wait(1600);fly.remove();
+  },
+  async roar(){setAct("roar");if(hasPose("roar"))setPose("roar");say("ガオー!");tone([[160,.18],[130,.25]]);await wait(1300);setPose(null);setAct("");},
+  async small(){const a=pickOne(["look","sway","stretch","stomp","tail"]);setAct(a);if(a==="stomp")setTimeout(()=>tone([[110,.08],[98,.1]]),350);
+    if(Math.random()<.3)say(pickOne(IDLE_LINES));await wait(1800);},
+  async home(){await walkTo(0);faceTo(1);}
+};
+function say(t){sayBubble($id("bub"),t);}
+async function runAct(name,arg){
+  if(P.busy||!petAlive())return;P.busy=true;
+  try{await ACTS[name](arg);}catch(e){}
+  if(petAlive()){setAct("");setPose(null);}
+  P.busy=false;
+}
+function feed(){
+  idleKick();const w=$id("dwrap");if(w&&w.classList.contains("sleep")){w.classList.remove("sleep");setPose(null);}
+  if(P.st<=1){say("うまれたら たべるね!");hopEl($id("dino"));return;}
+  if(P.busy){say("ちょっと まってね");return;}
+  runAct("eat","meat");
+}
+function startIdle(st){
+  clearTimeout(P.timer);P.st=st;P.busy=false;P.x=0;P.face=1;P.last=performance.now();
+  if(REDUCE)return;
+  const egg=st<=1;
+  const table=egg?[]:[["walk",4],["small",4],["eat",1.5],["dig",1.2],["chase",1],["roar",1]];
+  const loop=async()=>{
+    const w=$id("dwrap"),a=$id("act");if(!w||!a)return;
+    if(performance.now()-P.last>30000&&!w.classList.contains("sleep")&&!P.busy){
+      await runAct("home");if(!petAlive())return;w.classList.add("sleep");setAct("");if(hasPose("sleep"))setPose("sleep");}
+    if(!w.classList.contains("sleep")&&!P.busy){
+      if(egg){setAct(pickOne(["wobble","wobble","rock","peek"]));if(Math.random()<.3)say(pickOne(EGG_LINES));}
+      else{let t=Math.random()*table.reduce((s,x)=>s+x[1],0),pick="small";for(const [n,wt] of table){if((t-=wt)<0){pick=n;break;}}
+        runAct(pick);}
+    }
+    P.timer=setTimeout(loop,3200+Math.random()*3000);
   };
-  idleT=setTimeout(loop,1800);
+  P.timer=setTimeout(loop,1500);
 }
 
 /* ================= ちず ================= */
@@ -745,7 +862,7 @@ document.addEventListener("keydown",e=>{
 });
 
 /* テスト用 */
-window.__kk={GEN,STAGES,hintParts,withChoices,MISSIONS,get S(){return S;},get R(){return R;}};
+window.__kk={GEN,STAGES,hintParts,withChoices,MISSIONS,runAct,P,get S(){return S;},get R(){return R;}};
 
 title();
 })();

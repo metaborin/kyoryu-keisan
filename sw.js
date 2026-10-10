@@ -1,6 +1,6 @@
 // きょうりゅう けいさん Service Worker
 // 更新したら VERSION を上げる
-const VERSION = "v9-idle";
+const VERSION = "v10-pet";
 const CACHE = "kyoryu-keisan-" + VERSION;
 const CORE = [
   "./",
