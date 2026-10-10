@@ -313,8 +313,8 @@ function home(){
    assets/art/pose/<baby|child|adult>-<pose>.webp を置き、ここに名前を書くと自動で使われます。
    pose: walk-a, walk-b, eat-a, eat-b, sleep, roar, dig, look
    小物 assets/art/<name>.webp: meat, fern, dragonfly, dirt */
-const POSES={baby:[],child:[],adult:[]};
-const PROPS=[];
+const POSES={baby:["walk-a","walk-b","eat-a","eat-b","sleep","roar","dig","look"],child:["walk-a","walk-b","eat-a","eat-b","sleep","roar","dig","look"],adult:["walk-a","walk-b","eat-a","eat-b","sleep","roar","dig","look"]};
+const PROPS=["meat","fern","dragonfly","dirt"];
 const IDLE_LINES=["おなか すいたなあ","けいさん しようよ!","ふわぁ…","なにして あそぶ?","きょうも ぼうけんだ!","ガオー!","いい てんきだね","あるくの たのしい!"];
 const EGG_LINES=["コトコト…","もうすぐ うまれるかな?","ころん"];
 const PROP_SVG={

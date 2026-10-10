@@ -1,6 +1,6 @@
 // きょうりゅう けいさん Service Worker
 // 更新したら VERSION を上げる
-const VERSION = "v10-pet";
+const VERSION = "v11-pose-art";
 const CACHE = "kyoryu-keisan-" + VERSION;
 const CORE = [
   "./",
@@ -47,7 +47,35 @@ const CORE = [
   "./assets/art/chest-open.webp",
   "./assets/art/stopwatch.webp",
   "./assets/art/flag.webp",
-  "./assets/art/map.webp"
+  "./assets/art/map.webp",
+  "./assets/art/pose/baby-walk-a.webp",
+  "./assets/art/pose/baby-walk-b.webp",
+  "./assets/art/pose/baby-eat-a.webp",
+  "./assets/art/pose/baby-eat-b.webp",
+  "./assets/art/pose/baby-sleep.webp",
+  "./assets/art/pose/baby-roar.webp",
+  "./assets/art/pose/baby-dig.webp",
+  "./assets/art/pose/baby-look.webp",
+  "./assets/art/pose/child-walk-a.webp",
+  "./assets/art/pose/child-walk-b.webp",
+  "./assets/art/pose/child-eat-a.webp",
+  "./assets/art/pose/child-eat-b.webp",
+  "./assets/art/pose/child-sleep.webp",
+  "./assets/art/pose/child-roar.webp",
+  "./assets/art/pose/child-dig.webp",
+  "./assets/art/pose/child-look.webp",
+  "./assets/art/pose/adult-walk-a.webp",
+  "./assets/art/pose/adult-walk-b.webp",
+  "./assets/art/pose/adult-eat-a.webp",
+  "./assets/art/pose/adult-eat-b.webp",
+  "./assets/art/pose/adult-sleep.webp",
+  "./assets/art/pose/adult-roar.webp",
+  "./assets/art/pose/adult-dig.webp",
+  "./assets/art/pose/adult-look.webp",
+  "./assets/art/meat.webp",
+  "./assets/art/fern.webp",
+  "./assets/art/dragonfly.webp",
+  "./assets/art/dirt.webp"
 ];
 
 self.addEventListener("install", e => {
