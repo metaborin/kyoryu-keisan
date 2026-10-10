@@ -337,7 +337,7 @@ function setPose(pose){
   img.src=pose&&k&&POSES[k]&&POSES[k].includes(pose)?`${ART_ROOT}pose/${k}-${pose}.webp`:`${ART_ROOT}${GROW_ART[P.st]}.webp`;
 }
 const hasPose=p=>{const k=stageKey(P.st);return !!(k&&POSES[k]&&POSES[k].includes(p));};
-function setAct(name){const a=$id("act");if(!a)return;a.className="act";void a.offsetWidth;if(name)a.classList.add("a-"+name);}
+function setAct(name){const a=$id("act");if(!a)return;a.className="act";void a.offsetWidth;if(name)a.classList.add("a-"+name);const w=$id("dwrap");if(w)w.classList.toggle("posed",hasPose("walk-a"));}
 function faceTo(dir){P.face=dir;const f=$id("face");if(f)f.style.transform=`scaleX(${dir})`;}
 function range(){const w=$id("dwrap"),k=$id("walker");if(!w||!k)return 0;return Math.max(0,(w.clientWidth-k.clientWidth)/2-6);}
 const wait=ms=>new Promise(r=>setTimeout(r,ms));

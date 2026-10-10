@@ -559,3 +559,10 @@ td.r,th.r{text-align:right}
 .feed-btn{border:0;background:var(--card);border-radius:999px;padding:8px 18px;font-size:17px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 0 #bfb59d;border:1px solid #e2d9c6;position:relative;z-index:3}
 .feed-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #bfb59d}
 @media (max-width:760px){.dino-wrap{--dw:200px}}
+
+/* ポーズ画像があるときは、絵そのものの動きを優先して傾けない */
+.posed .act.a-eat,.posed .act.a-dig,.posed .act.a-roar{animation:none}
+.posed .act.a-roar{animation:roarshake .9s ease-in-out}
+@keyframes roarshake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(2px)}40%,80%{transform:translateX(-2px)}}
+.posed.sleep .zzz{top:46%;right:12%}
+.flyer{width:76px}
