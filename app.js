@@ -536,7 +536,7 @@ function makeSet(id){
 let RUN_SEQ=0;
 function start(id,mode){
   stopRun();
-  R={id,mode,seq:++RUN_SEQ,qs:[],i:0,input:"",tries:0,firstOk:0,food:0,lock:false,combo:0,maxCombo:0,hint:false,
+  R={id,mode,seq:++RUN_SEQ,qs:[],i:0,input:"",tries:0,firstOk:0,food:0,lock:false,combo:0,maxCombo:0,hintLv:0,
      hintUsed:false,choiceOk:0,goldOk:false,correct:0,count:0,t0:performance.now(),over:false,goldAt:rnd(2,9),wrongPick:[]};
   if(mode==="adv"||mode==="review"){R.qs=makeSet(id).map((q,i)=>decorate(q,i));if(!R.qs.length){home();return;}}
   else{R.qs=[decorate(freshQ(),0)];}
@@ -605,43 +605,74 @@ function quiz(){
   app.querySelectorAll(".key[data-n]").forEach(b=>b.onclick=()=>press(b.dataset.n));
   app.querySelectorAll(".egg-btn").forEach(b=>b.onclick=()=>{if(R.lock)return;R.input=b.dataset.c;const box=document.getElementById("box");box.className="box";box.textContent=R.input;check(b);});
   const go=document.getElementById("go");if(go)go.onclick=()=>check();
-  if(R.hint)showHint(q);
+  if(R.hintLv)showHint(q,R.hintLv);
   if(S.set.autoRead&&!R.input&&R.mode!=="speed")setTimeout(()=>speak(q.say),250);
 }
 
-/* ---- ヒント ---- */
+/* ---- ヒント ----
+   方針:答えの数を そのまま数えられる図は出さない。
+   考え方(いくつと いくつ・10の まとまり・さくらんぼ)を 1だんずつ 示し、さいごの 1歩は 子どもが 考える。 */
 const dots=(n,c="")=>Array.from({length:n},()=>`<i class="${c}"></i>`).join("");
 const frame=cells=>`<div class="tf">${cells.map(c=>`<i class="${c}"></i>`).join("")}</div>`;
 const fill=(n,c)=>Array(Math.max(0,n)).fill(c);
-const blocks=n=>`<div class="blk">${"<b></b>".repeat(Math.floor(n/10))}${"<i></i>".repeat(n%10)}</div>`;
-function hintParts(q){
+const Qm=`<b class="hq">?</b>`;
+const num=v=>v==="?"?Qm:`<b>${v}</b>`;
+/* さくらんぼ図:上の かずを 下の 2つに わける */
+const cherry=(top,l,r,cap="")=>`<div class="cherry">${cap?`<span class="ch-cap">${cap}</span>`:""}
+  <span class="ch-top">${num(top)}</span><svg viewBox="0 0 100 34" aria-hidden="true"><path d="M50 2 L18 32 M50 2 L82 32"/></svg>
+  <span class="ch-row"><span class="ch-l">${num(l)}</span><span class="ch-r">${num(r)}</span></span></div>`;
+const card=v=>`<span class="ncard">${v}</span>`;
+const mini=t=>`<span class="meq">${t}</span>`;
+/* くらいの へや(十のくらい・一のくらい) */
+const pv=(a,op,b)=>{const d=v=>[Math.floor(v/10),v%10];const [at,ao]=d(a),[bt,bo]=d(b);
+  return `<table class="pv"><thead><tr><th></th><th>十の<br>くらい</th><th>一の<br>くらい</th></tr></thead><tbody>
+    <tr><td></td><td>${at||""}</td><td>${ao}</td></tr><tr><td class="pop">${op}</td><td>${bt||""}</td><td>${bo}</td></tr>
+    <tr class="sum"><td></td><td>${Qm}</td><td>${Qm}</td></tr></tbody></table>`;};
+const tens=v=>{const t=Math.floor(v/10),o=v%10;return t&&o?`${v}は 10の まとまり ${t}こと ばら ${o}こ`:t?`${v}は 10の まとまり ${t}こ`:`${v}は ばら ${o}こ`;};
+function hintLevels(q){
   const h=q.hint;
-  if(h.k==="bond")return [`<div class="dots">${dots(h.a)}${dots(h.n-h.a,"q")}</div>`,`${h.n}こ のうち ${h.a}こ。のこりは なんこ?`];
+  if(h.k==="bond"){const {n,a}=h;return [
+    {vis:cherry(n,a,"?"),txt:`${n}は ${a}と いくつに わけられるかな?`},
+    {vis:`${card(a)}<span class="arrow">→</span>${card(n)}`,txt:`${a}の つぎから ${n}まで、ゆびを おって かぞえよう`}];}
   if(h.k==="add"){const {a,b}=h;
-    if(a+b<=10)return [`<div class="dots">${dots(a)}<span class="gap"></span>${dots(b,"b")}</div>`,`${a}こと ${b}こを あわせると?`];
-    if(a<10&&b<10){const f=10-a,r=b-f;
-      return [`<div class="tfs">${frame([...fill(a,""),...fill(f,"b")])}${frame([...fill(r,"b"),...fill(10-r,"e")])}</div>`,
-        `${a}は あと ${f}で 10。${b}を ${f}と ${r}に わけると…`];}
-    return [`${blocks(a)}<span class="opx">+</span>${blocks(b)}`,`10の まとまりと ばらを べつべつに かぞえよう`];}
+    if(a+b<=10){const big=Math.max(a,b),small=Math.min(a,b);return [
+      {vis:`${card(big)}<span class="opx">+</span><div class="dots">${dots(small,"b")}</div>`,txt:`おおきい ${big}から はじめて、${small}こ ふやそう`},
+      {vis:cherry("?",a,b),txt:`${a}と ${b}を あわせると いくつ?`}];}
+    if(a<10&&b<10){const f=10-a,r=b-f;return [
+      {vis:frame([...fill(a,""),...fill(f,"e")]),txt:`${a}は あと いくつで 10に なるかな?`},
+      {vis:cherry(b,f,"?"),txt:`${b}を ${f}と いくつに わける? ${a}と ${f}で 10。のこりを 10に たそう`}];}
+    return [
+      {vis:pv(a,"+",b),txt:`十の くらいどうし、一の くらいどうしを たそう`},
+      {vis:pv(a,"+",b),txt:`${tens(a)}。${tens(b)}。10の まとまりは あわせて いくつ? ばらは あわせて いくつ?`}];}
   if(h.k==="sub"){const {a,b}=h;
-    if(a<=10)return [`<div class="dots">${dots(a-b)}${dots(b,"x")}</div>`,`${a}こから ${b}こ とると?`];
-    if(a<20&&b<10&&a-10<b){const o=a-10;
-      return [`<div class="tfs">${frame([...fill(10-b,""),...fill(b,"x")])}${frame([...fill(o,""),...fill(10-o,"e")])}</div>`,
-        `10から ${b}を とって、のこりと ${o}を あわせると…`];}
-    return [`${blocks(a)}<span class="opx">−</span>${blocks(b)}`,`10の まとまりと ばらを べつべつに かんがえよう`];}
-  if(h.k==="three"){const first=h.o1==="+"?`${dots(h.a)}<span class="gap"></span>${dots(h.b,"b")}`:`${dots(h.a-h.b)}${dots(h.b,"x")}`;
-    return [`<div class="dots">${first}</div>`,`まず ${h.a}${h.o1}${h.b} を けいさん。そのあと ${h.o2==="+"?"たす":"ひく"} ${h.c}`];}
-  return ["",""];
+    if(a<=10)return [
+      {vis:`${card(a)}<span class="opx">−</span><div class="dots">${dots(b,"x")}</div>`,txt:`${a}から ${b}つ もどって かぞえよう`},
+      {vis:cherry(a,b,"?"),txt:`${a}は ${b}と いくつ? (いくつと いくつ)`}];
+    if(a<20&&b<10&&a-10<b){const o=a-10;return [
+      {vis:cherry(a,10,o),txt:`${a}を 10と ${o}に わけよう。${o}から ${b}は ひけないね`},
+      {vis:mini(`10 − ${b} = ${Qm}`),txt:`10から ${b}を ひいた かずと、${o}を あわせよう`}];}
+    return [
+      {vis:pv(a,"−",b),txt:`十の くらいどうし、一の くらいどうしで ひこう`},
+      {vis:pv(a,"−",b),txt:`${tens(a)}。${tens(b)}。10の まとまりは いくつ のこる? ばらは いくつ のこる?`}];}
+  if(h.k==="three"){const w=h.o2==="+"?"たす":"ひく";return [
+    {vis:mini(`<u>${h.a} ${h.o1} ${h.b}</u> ${h.o2} ${h.c}`),txt:`まず せんの ところ ${h.a}${h.o1}${h.b} を けいさんしよう`},
+    {vis:mini(`${Qm} ${h.o2} ${h.c}`),txt:`さいしょの こたえに ${h.c}を ${w}よ`}];}
+  return [];
 }
-function showHint(q){
-  R.hint=true;const [vis,txt]=hintParts(q);
-  const h=document.getElementById("hint");if(h)h.innerHTML=`<div class="hint-vis">${vis}</div><p class="htxt">${txt}</p>`;
+const hintParts=q=>{const L=hintLevels(q);return L.length?[L[0].vis,L[0].txt]:["",""];};
+function showHint(q,lv){
+  const L=hintLevels(q);if(!L.length)return;
+  R.hintLv=Math.min(L.length,Math.max(lv||1,R.hintLv||0));
+  const cur=L[R.hintLv-1],more=R.hintLv<L.length;
+  const h=document.getElementById("hint");
+  if(h)h.innerHTML=`<div class="hint-vis">${cur.vis}</div><p class="htxt"><span class="hlv">ヒント ${R.hintLv}/${L.length}</span>${cur.txt}</p>`;
+  const k=app.querySelector('.key[data-n="hint"]');if(k)k.textContent=more?(R.hintLv?"つぎの ヒント":"ヒント"):"ヒント";
 }
 
 function press(n){
   if(!R||R.lock||R.over)return;
   const q=R.qs[R.i];
-  if(n==="hint"){sTap();R.hintUsed=true;showHint(q);return;}
+  if(n==="hint"){sTap();R.hintUsed=true;showHint(q,(R.hintLv||0)+1);return;}
   if(n==="skip"){sTap();R.lock=true;R.combo=0;const msg=document.getElementById("msg");if(msg)msg.textContent=`こたえは ${q.ans} だったよ`;later(next,700);return;}
   if(q.choices)return;
   if(n==="del")R.input=R.input.slice(0,-1);
@@ -689,14 +720,14 @@ function check(eggBtn){
     addMistake(q);
     if(fast){R.lock=true;box.className="box ok";box.textContent=q.ans;msg.textContent=`こたえは ${q.ans}`;record(q,false);later(next,900);return;}
     if(eggBtn){R.wrongPick.push(+R.input);eggBtn.disabled=true;}
-    if(R.tries===1){R.hintUsed=true;msg.textContent="おしい! ヒントを みて もういちど";showHint(q);R.input="";
+    if(R.tries===1){R.hintUsed=true;msg.textContent="おしい! ヒントを みて もういちど";showHint(q,1);R.input="";
       setTimeout(()=>{if(R&&!R.lock&&box.isConnected){box.className="box";box.innerHTML="&nbsp;";}},500);}
-    else{R.lock=true;showHint(q);box.className="box ok";box.textContent=q.ans;
+    else{R.lock=true;showHint(q,99);box.className="box ok";box.textContent=q.ans;
       msg.textContent=`こたえは ${q.ans} だよ。つぎは できるよ!`;R.food++;record(q,false);save();later(next,2400);}
   }
 }
 function next(){
-  R.i++;R.input="";R.tries=0;R.lock=false;R.hint=false;R.wrongPick=[];
+  R.i++;R.input="";R.tries=0;R.lock=false;R.hintLv=0;R.wrongPick=[];
   if(R.mode==="adv"||R.mode==="review"){if(R.i>=R.qs.length){finishRun({});return;}}
   else if(R.i>=R.qs.length)R.qs.push(decorate(freshQ(),R.i));
   quiz();
@@ -883,7 +914,7 @@ document.addEventListener("keydown",e=>{
 });
 
 /* テスト用 */
-window.__kk={GEN,STAGES,hintParts,withChoices,MISSIONS,runAct,P,get S(){return S;},get R(){return R;}};
+window.__kk={GEN,STAGES,hintParts,hintLevels,withChoices,MISSIONS,runAct,P,get S(){return S;},get R(){return R;}};
 
 title();
 })();

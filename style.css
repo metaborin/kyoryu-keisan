@@ -579,3 +579,31 @@ td.r,th.r{text-align:right}
   background:radial-gradient(closest-side,#3d2e1a55,#3d2e1a22 60%,transparent);pointer-events:none}
 .is-egg .walker::before{display:none}
 .dino-wrap.sleep .walker::before{left:12%;right:12%}
+
+/* ================= ヒント(考え方を 1だんずつ) ================= */
+.hint{gap:6px}
+.hint-vis{gap:12px;min-height:0}
+.hlv{display:inline-block;font-size:13px;background:var(--leaf);color:#fff;border-radius:999px;padding:1px 10px;margin-right:8px;vertical-align:middle}
+.htxt{font-size:18px;line-height:1.5;max-width:30em}
+.hq{color:var(--lava);font-family:var(--display);font-weight:400}
+.ncard{display:inline-grid;place-items:center;min-width:56px;height:56px;padding:0 8px;box-sizing:border-box;border-radius:14px;background:#fff;
+  border:3px solid var(--leaf);font-family:var(--display);font-size:30px;color:var(--leaf-deep)}
+.arrow{font-family:var(--display);font-size:26px;color:var(--lava)}
+.cherry{display:inline-flex;flex-direction:column;align-items:center;width:150px;position:relative}
+.cherry b{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;background:#fff;border:3px solid var(--leaf);
+  font-family:var(--display);font-weight:400;font-size:26px;color:var(--leaf-deep);box-sizing:border-box}
+.cherry b.hq{border-color:var(--lava);border-style:dashed;color:var(--lava);background:#fff7f0}
+.cherry svg{width:110px;height:34px;display:block;margin:-2px 0}
+.cherry svg path{stroke:var(--leaf);stroke-width:3;fill:none;stroke-linecap:round}
+.ch-row{display:flex;justify-content:space-between;width:150px}
+.ch-cap{font-size:13px;opacity:.7}
+.meq{font-family:var(--display);font-size:34px;letter-spacing:.06em;background:#fff;border-radius:14px;padding:6px 18px;border:2px solid #e2d9c6}
+.meq u{text-decoration:none;border-bottom:5px solid var(--sun);padding-bottom:2px}
+.meq .hq{font-size:inherit}
+.pv{border-collapse:separate;border-spacing:0;background:#fff;border-radius:12px;overflow:hidden;border:2px solid #e2d9c6;font-variant-numeric:tabular-nums}
+.pv th{font-size:12px;font-weight:700;background:#eef5ee;padding:4px 10px;line-height:1.2;text-align:center;opacity:1}
+.pv td{font-family:var(--display);font-size:30px;text-align:center;padding:2px 16px;min-width:1.2em;border-bottom:0;white-space:nowrap}
+.pv td:nth-child(2){border-right:2px dashed #d4cbb4}
+.pv .pop{color:var(--lava);padding-right:4px}
+.pv tr.sum td{border-top:3px solid var(--leaf-deep)}
+.pv .hq{font-size:26px}

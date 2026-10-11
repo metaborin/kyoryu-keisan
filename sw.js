@@ -1,6 +1,6 @@
 // きょうりゅう けいさん Service Worker
 // 更新したら VERSION を上げる
-const VERSION = "v12c-nocache";
+const VERSION = "v13-hint";
 const CACHE = "kyoryu-keisan-" + VERSION;
 const CORE = [
   "./",
