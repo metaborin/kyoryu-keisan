@@ -151,6 +151,7 @@ const spk=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5
 const lockSVG=`<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" fill="#fff"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="#fff" stroke-width="2.5" fill="none"/></svg>`;
 const mapSVG=art("map","map-art");
 const bookArt=art("journal","journal-art");
+const lessonIcon=`<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="8" width="36" height="28" rx="5" fill="#3d6444"/><rect x="10" y="12" width="28" height="20" rx="2" fill="#fffdf7"/><circle cx="17" cy="22" r="3.2" fill="#3d6444"/><circle cx="25" cy="22" r="3.2" fill="#3a7bb8"/><path d="M31 18 l4 4 -4 4" stroke="#cc672b" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 36 l-4 7 M30 36 l4 7" stroke="#8a6440" stroke-width="3" stroke-linecap="round"/></svg>`;
 const retrySVG=`<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="#f6b0a0"/><path d="M15 25 a9 9 0 1 0 3 -8" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M14 11 v8 h8" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const sceneArt=cls=>`<img class="scene-art" src="${ART_ROOT}${cls}.webp" alt="" aria-hidden="true" draggable="false" width="627" height="627">`;
 
@@ -177,7 +178,7 @@ function slotCard(s,i){
       <span class="meta">${meat} ${u.food} ・ ほし ${stars}/24 ・ なかま ${u.zukan.length}/8</span></button>
       <button class="del" data-del="${i}">けす</button></div>`;
 }
-function title(){
+function title(){closeLesson(true);
   R=null;S=null;cur=-1;
   app.innerHTML=`<section class="screen title">
     <div class="title-hero"><div class="title-dino" id="tdino">${dinoArt(4)}</div>
@@ -269,7 +270,7 @@ const fossilBoard=(id,cls="")=>`<div class="fboard ${cls} ${fossilCount(id)===4?
 const spName=id=>{const sp=SPECIES.find(s=>s.id===id);return S.zukan.includes(id)?sp.name:"なぞの きょうりゅう";};
 
 /* ================= おうち ================= */
-function home(){
+function home(){closeLesson(true);
   stopRun();R=null;ensureMissions();save();
   const st=stageOf(S.food),next=GROW[st+1];
   const pct=next?Math.round((S.food-GROW[st].at)/(next.at-GROW[st].at)*100):100;
@@ -302,6 +303,7 @@ function home(){
         <div class="two">
           <button class="tile" id="toZukan">${bookArt}<span>ずかん<small>なかま ${S.zukan.length}/8 ・ かせき ${fossilTotal()}/32</small></span></button>
           <button class="tile" id="toReview" ${S.mistakes.length?"":"disabled"}>${retrySVG}<span>ふくしゅう<small>${S.mistakes.length?`${S.mistakes.length}もん`:"いまは ないよ"}</small></span></button>
+          <button class="tile" id="toLesson">${lessonIcon}<span>ときかた<small>わからない ときに</small></span></button>
         </div>
         <div class="stamp"><h2>スタンプカード <small>${S.days.includes(today())?"きょうの スタンプ ゲット!":"1かい あそぶと 1こ"}</small></h2>
           <div class="stamp-grid">${Array.from({length:10},(_,i)=>`<span class="${i<stamps?"on":""}">${i<stamps?footSVG("","#fff"):""}</span>`).join("")}</div>
@@ -312,6 +314,7 @@ function home(){
   document.getElementById("toMap").onclick=()=>{sTap();map();};
   document.getElementById("toZukan").onclick=()=>{sTap();zukan();};
   document.getElementById("toReview").onclick=()=>{sTap();start("review","review");};
+  document.getElementById("toLesson").onclick=()=>{sTap();lessonList();};
   document.getElementById("toTitle").onclick=title;
   const d=document.getElementById("dino"),b=document.getElementById("bub");
   d.onclick=()=>{const w=document.getElementById("dwrap");if(w&&w.classList.contains("sleep")){w.classList.remove("sleep");setPose(null);idleKick();sayBubble(b,"あっ、おはよう!");hopEl(d);tone([[659,.1],[880,.15]]);return;}
@@ -459,7 +462,7 @@ function startIdle(st){
 }
 
 /* ================= ちず ================= */
-function map(){
+function map(){closeLesson(true);
   stopRun();R=null;
   const nextStage=STAGES.findIndex((s,i)=>unlocked(i)&&!cleared(s.id));
   app.innerHTML=`<section class="screen">
@@ -490,7 +493,8 @@ function stageMenu(id){
     <div class="top"><button class="quit" id="back">ちずへ</button></div>
     <div class="smenu ${area.cls}">
       <div class="sm-head"><div class="sm-scene">${sceneArt(area.cls)}</div>
-        <div class="sm-title"><span class="sm-no">${idx+1}</span><div><small>${area.name}</small><h1>${stg.name}</h1></div></div></div>
+        <div class="sm-title"><span class="sm-no">${idx+1}</span><div><small>${area.name}</small><h1>${stg.name}</h1></div></div>
+        <button class="sm-lesson" id="smLesson">${lessonIcon}<span>ときかたを みる</span></button></div>
       <div class="modes">
         <button class="mode adv" data-m="adv"><span class="mt">ぼうけん</span><span class="md">10もん とこう</span>
           <span class="mr">${starsRow(S.stars[id]||0)}${b.time?`<span>じこベスト ${fmtTime(b.time)}</span>`:""}</span></button>
@@ -504,6 +508,7 @@ function stageMenu(id){
     </div></section>`;
   document.getElementById("back").onclick=map;
   app.querySelectorAll(".mode[data-m]").forEach(btn=>btn.onclick=()=>{sTap();start(id,btn.dataset.m);});
+  document.getElementById("smLesson").onclick=()=>{sTap();openLesson(id,"menu");};
 }
 const rivalOf=id=>{const i=STAGES.findIndex(s=>s.id===id);return SPECIES[(i+3)%SPECIES.length].id;};
 
@@ -584,6 +589,7 @@ function quiz(){
   app.innerHTML=`<section class="screen">
     <div class="qtop"><button class="quit" id="quit">${R.mode==="review"?"おうちへ":"やめる"}</button>
       <span class="qname">${stageName(R.id)}${MODE_NAME[R.mode]?` ・ ${MODE_NAME[R.mode]}`:""}</span>
+      ${R.mode==="adv"||R.mode==="review"?`<button class="quit qlesson" id="qlesson">${lessonIcon}ときかた</button>`:""}
       ${headerHTML()}
       <span class="combo ${R.combo>=3?"on":""}" id="combo">れんぞく ${R.combo}!</span></div>
     <div class="quiz">
@@ -602,6 +608,7 @@ function quiz(){
     </div></section>`;
   document.getElementById("quit").onclick=()=>{const m=R.mode;stopRun();m==="review"?home():stageMenu(R.id);};
   document.getElementById("say").onclick=()=>speak(q.say);
+  const ql=document.getElementById("qlesson");if(ql)ql.onclick=()=>{sTap();R.hintUsed=true;openLesson(q.stage,"quiz");};
   app.querySelectorAll(".key[data-n]").forEach(b=>b.onclick=()=>press(b.dataset.n));
   app.querySelectorAll(".egg-btn").forEach(b=>b.onclick=()=>{if(R.lock)return;R.input=b.dataset.c;const box=document.getElementById("box");box.className="box";box.textContent=R.input;check(b);});
   const go=document.getElementById("go");if(go)go.onclick=()=>check();
@@ -824,6 +831,126 @@ function finishRun(extra){
   const ns=document.getElementById("nextSt");if(ns)ns.onclick=()=>stageMenu(nextSt.id);
 }
 
+/* ================= ときかた(かいせつ) =================
+   1年生むけの かみしばい。1こまずつ 絵が すすみ、こえで よみあげる。
+   れいだいは きまった かずを つかう(いま といている もんだいの こたえは 見せない)。 */
+const L_=(n,cls="",from=0)=>Array.from({length:n},(_,i)=>`<i class="${cls}" style="--d:${(from+i)*.12}s"></i>`).join("");
+const LN=(n,cls="",start=1,from=0)=>Array.from({length:n},(_,i)=>`<i class="${cls} cnt" style="--d:${(from+i)*.45}s"><span>${start+i}</span></i>`).join("");
+const LD=(...p)=>`<div class="ldots">${p.join("")}</div>`;
+const LG=`<span class="lgap"></span>`;
+const LF=cells=>`<div class="tf lf">${cells.map((c,i)=>`<i class="${c}" style="--d:${i*.06}s"></i>`).join("")}</div>`;
+const LE=s=>`<div class="leq">${s}</div>`;
+const LA=v=>`<b class="lans">${v}</b>`;
+const LC=(t,l,r,hl="")=>`<div class="cherry lcherry ${hl}"><span class="ch-top">${num(t)}</span><svg viewBox="0 0 100 34" aria-hidden="true"><path d="M50 2 L18 32 M50 2 L82 32"/></svg><span class="ch-row"><span class="ch-l">${num(l)}</span><span class="ch-r">${num(r)}</span></span></div>`;
+const LR=(t,o,cls="")=>`<div class="blk lblk ${cls}">${"<b></b>".repeat(t)}${"<i></i>".repeat(o)}</div>`;
+const LROW=(...p)=>`<div class="lrow">${p.join("")}</div>`;
+const LOP=o=>`<span class="lop">${o}</span>`;
+const LESSONS={
+  s1:{ex:"5は 2と □",steps:[
+    {v:LD(L_(5)),t:"たまごが 5こ あるよ。"},
+    {v:LD(L_(2),LG,L_(3,"b")),t:"5こを、2こと のこりに わけるよ。"},
+    {v:LD(L_(2),LG,LN(3,"b")),t:"のこりを かぞえよう。1、2、3。のこりは 3こ。"},
+    {v:LROW(LC(5,2,3)),t:"これを さくらんぼの かたちで かくと、5は 2と 3。"},
+    {v:LE(`5 は 2 と ${LA(3)}`),t:"こたえは 3。5は 2と 3 だね。"}]},
+  s2:{ex:"3 + 2",steps:[
+    {v:LD(L_(3)),t:"たまごが 3こ あるよ。"},
+    {v:LD(L_(3),LG,L_(2,"b new")),t:"そこに 2こ ふえたよ。"},
+    {v:LD(LN(3),LG,LN(2,"b",4,3)),t:"ぜんぶ かぞえると、1、2、3、4、5。"},
+    {v:LROW(`<span class="ncard">3</span>`,LOP("+"),LD(LN(2,"b",4))),t:"おおきい 3から、4、5 と つづけて かぞえても いいよ。"},
+    {v:LE(`3 + 2 = ${LA(5)}`),t:"あわせて 5こ。3 たす 2 は 5。"}]},
+  s3:{ex:"7 − 3",steps:[
+    {v:LD(L_(7)),t:"たまごが 7こ あるよ。"},
+    {v:LD(L_(4),L_(3,"x")),t:"そこから 3こ とると……"},
+    {v:LD(LN(4),L_(3,"x gone")),t:"のこりを かぞえよう。1、2、3、4。"},
+    {v:LROW(LC(7,3,4)),t:"7は 3と 4。だから、3こ とると 4こ のこる。"},
+    {v:LE(`7 − 3 = ${LA(4)}`),t:"7 ひく 3 は 4。"}]},
+  s4:{ex:"4 + 0 / 4 − 4",steps:[
+    {v:LD(`<span class="lzero">0</span>`),t:"0は、なにも ない こと だよ。"},
+    {v:LD(L_(4),LG,`<span class="lzero sm">0</span>`),t:"4こに 0こ たしても、ふえないね。"},
+    {v:LE(`4 + 0 = ${LA(4)}`),t:"4 たす 0 は 4。"},
+    {v:LD(L_(4,"x")),t:"4こから 4こ ぜんぶ とると、なにも のこらない。"},
+    {v:LE(`4 − 4 = ${LA(0)}`),t:"4 ひく 4 は 0。"}]},
+  s5:{ex:"2 + 3 + 4",steps:[
+    {v:LE(`2 + 3 + 4`),t:"かずが 3つ ある しきは、まえから じゅんばんに けいさんするよ。"},
+    {v:LE(`<u>2 + 3</u> + 4`)+LD(L_(2),LG,L_(3,"b")),t:"まず、まえの 2 たす 3。"},
+    {v:LE(`<u>2 + 3</u> + 4`)+LD(LN(5)),t:"2 たす 3 は 5。"},
+    {v:LE(`<u>5</u> + 4`)+LD(L_(5),LG,L_(4,"b")),t:"つぎに、5 たす 4。"},
+    {v:LE(`2 + 3 + 4 = ${LA(9)}`),t:"5 たす 4 は 9。こたえは 9。"}]},
+  s6:{ex:"8 + 5",steps:[
+    {v:LE(`8 + 5`)+LROW(LF([...fill(8,""),...fill(2,"e")]),LD(L_(5,"b"))),t:"8 たす 5。10の はこに 8こ はいっているよ。"},
+    {v:LROW(LF([...fill(8,""),...fill(2,"e hl")]),LD(L_(5,"b"))),t:"8は あと 2で 10に なるね。"},
+    {v:LROW(LC(5,2,3,"hl-l")),t:"そこで、5を 2と 3に わけるよ。"},
+    {v:LROW(LF([...fill(8,""),...fill(2,"b new")]),LD(L_(3,"b"))),t:"8に 2を たして 10。はこが いっぱいに なったね。"},
+    {v:LROW(LF(fill(10,"")),LOP("と"),LD(L_(3,"b"))),t:"10と 3で 13。"},
+    {v:LE(`8 + 5 = ${LA(13)}`),t:"8 たす 5 は 13。"}]},
+  s7:{ex:"13 − 8",steps:[
+    {v:LE(`13 − 8`)+LROW(LF(fill(10,"")),LD(L_(3))),t:"13 ひく 8。13は、10と 3。"},
+    {v:LROW(LC(13,10,3)),t:"3から 8は ひけないね。だから 13を 10と 3に わけるよ。"},
+    {v:LROW(LF([...fill(2,""),...fill(8,"x")]),LD(L_(3))),t:"10から 8を とると、2 のこる。"},
+    {v:LROW(LD(L_(2)),LOP("と"),LD(L_(3))),t:"のこった 2と、3を あわせて 5。"},
+    {v:LE(`13 − 8 = ${LA(5)}`),t:"13 ひく 8 は 5。"}]},
+  s8:{ex:"30 + 20 / 24 + 3",steps:[
+    {v:LROW(LR(1,0),`<span class="ltxt">10</span>`,`<span class="lgap"></span>`,LR(0,1),`<span class="ltxt">1</span>`),t:"ぼう 1ぽんは 10の まとまり。こまかい つぶ 1こは 1 だよ。"},
+    {v:LE(`30 + 20`)+LROW(LR(3,0),LOP("+"),LR(2,0)),t:"30 たす 20。10の まとまりが 3こと 2こ。"},
+    {v:LROW(LR(5,0)),t:"あわせて 10の まとまりが 5こ。だから 50。"},
+    {v:LE(`24 + 3`)+LROW(LR(2,4),LOP("+"),LR(0,3)),t:"24 たす 3。10の まとまり 2こと、ばらが 4こ。そこに ばらが 3こ。"},
+    {v:LROW(LR(2,7)),t:"ばらどうしを たすと、4 たす 3 で 7。10の まとまりは 2こ の まま。"},
+    {v:LE(`30 + 20 = ${LA(50)}`)+LE(`24 + 3 = ${LA(27)}`),t:"30 たす 20 は 50。24 たす 3 は 27。"}]}
+};
+let LS=null;
+function openLesson(id,from){
+  const L=LESSONS[id];if(!L)return;
+  closeLesson(true);
+  const idx=STAGES.findIndex(s=>s.id===id);
+  LS={id,from,i:0};
+  const ov=document.createElement("div");ov.className="lesson";ov.id="lesson";ov.setAttribute("role","dialog");ov.setAttribute("aria-label",`ときかた ${STAGES[idx].name}`);
+  ov.innerHTML=`<div class="lbox">
+    <div class="lhead"><span class="sm-no">${idx+1}</span><div class="lttl"><small>ときかた</small><h2>${STAGES[idx].name}</h2></div>
+      <span class="lex">れい ${L.ex}</span><button class="lclose" id="lclose" aria-label="とじる">✕</button></div>
+    <div class="lprog" id="lprog"></div>
+    <div class="lstage" id="lstage"></div>
+    <p class="ltext" id="ltext"></p>
+    <div class="lnav"><button class="btn" id="lprev">まえへ</button><button class="btn" id="lsay" aria-label="もういちど きく">${spk}<span class="lsay-t">もういちど きく</span></button><button class="btn main" id="lnext">つぎへ</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  document.getElementById("lclose").onclick=()=>closeLesson();
+  document.getElementById("lprev").onclick=()=>{if(LS.i>0){LS.i--;sTap();drawLesson();}};
+  document.getElementById("lsay").onclick=()=>speak(L.steps[LS.i].t);
+  document.getElementById("lnext").onclick=()=>{
+    if(LS.i<L.steps.length-1){LS.i++;sTap();drawLesson();return;}
+    const f=LS.from;closeLesson();
+    if(f==="quiz")return;
+    if(unlocked(idx))start(id,"adv");
+  };
+  ov.addEventListener("click",e=>{if(e.target===ov)closeLesson();});
+  drawLesson();
+}
+function drawLesson(){
+  const L=LESSONS[LS.id],st=L.steps[LS.i],last=LS.i===L.steps.length-1,idx=STAGES.findIndex(s=>s.id===LS.id);
+  document.getElementById("lprog").innerHTML=L.steps.map((_,k)=>`<i class="${k<LS.i?"done":k===LS.i?"now":""}"></i>`).join("");
+  const stg=document.getElementById("lstage");stg.innerHTML=st.v;stg.classList.remove("in");void stg.offsetWidth;stg.classList.add("in");
+  document.getElementById("ltext").textContent=st.t;
+  document.getElementById("lprev").disabled=LS.i===0;
+  document.getElementById("lnext").textContent=!last?"つぎへ":LS.from==="quiz"?"もんだいに もどる":unlocked(idx)?"やってみる!":"とじる";
+  if(last)setTimeout(()=>burst(document.querySelector("#lstage .lans"),14),500);
+  speak(st.t);
+}
+function closeLesson(silent){
+  const ov=document.getElementById("lesson");if(ov)ov.remove();
+  if(!silent)try{speechSynthesis.cancel();}catch(e){}
+  LS=null;
+}
+function lessonList(){
+  stopRun();R=null;
+  app.innerHTML=`<section class="screen">
+    <div class="top"><h1 class="h-title">ときかた ずかん</h1><button class="quit" id="back">おうちへ</button></div>
+    <p class="zhelp">わからなく なったら ここで ときかたを みてね。まだ あそべない ステージの ときかたも みられるよ。</p>
+    <div class="llist">${STAGES.map((s,i)=>`<button class="lcard ${AREAS[s.area].cls}" data-l="${s.id}"><span class="sm-no">${i+1}</span>
+      <span class="lct"><b>${s.name}</b><small>れい ${LESSONS[s.id].ex}</small></span></button>`).join("")}</div></section>`;
+  document.getElementById("back").onclick=home;
+  app.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{sTap();openLesson(b.dataset.l,"list");});
+}
+
 /* ================= ずかん ================= */
 function zukan(){
   app.innerHTML=`<section class="screen">
@@ -907,6 +1034,7 @@ function parent(){
 
 /* ================= キーボード ================= */
 document.addEventListener("keydown",e=>{
+  if(LS){if(e.key==="Escape")closeLesson();else if(e.key==="ArrowRight"||e.key==="Enter"){e.preventDefault();document.getElementById("lnext").click();}else if(e.key==="ArrowLeft")document.getElementById("lprev").click();return;}
   if(!R||!document.getElementById("go"))return;
   if(/^[0-9]$/.test(e.key))press(e.key);
   else if(e.key==="Backspace")press("del");
@@ -914,7 +1042,7 @@ document.addEventListener("keydown",e=>{
 });
 
 /* テスト用 */
-window.__kk={GEN,STAGES,hintParts,hintLevels,withChoices,MISSIONS,runAct,P,get S(){return S;},get R(){return R;}};
+window.__kk={LESSONS,openLesson,GEN,STAGES,hintParts,hintLevels,withChoices,MISSIONS,runAct,P,get S(){return S;},get R(){return R;}};
 
 title();
 })();
